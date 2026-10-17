@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PixelTools — PDF, Immagini e ZIP nel browser</title>
+  <meta name="description" content="Strumenti per PDF, immagini e archivi ZIP che funzionano al 100% nel tuo browser. Nessun file viene caricato su un server.">
+
+  <!-- Font pixel -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Librerie via CDN (caricate in ordine grazie a "defer") -->
+  <!-- pdf-lib: crea e modifica PDF → variabile globale PDFLib -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js" defer></script>
+  <!-- JSZip: crea archivi .zip → variabile globale JSZip -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
+  <!-- pdf.js: SOLO per mostrare l'anteprima delle pagine nel tool Firma → pdfjsLib -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
+  <!-- La nostra app (sempre per ultima) -->
+  <script src="app.js" defer></script>
+</head>
+<body>
+
+  <!-- ================= HEADER ================= -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="#" class="logo" aria-label="PixelTools, torna alla dashboard">
+        PIXEL<span class="logo-accent">TOOLS</span><span class="logo-cursor" aria-hidden="true"></span>
+      </a>
+      <span class="badge">🔒 100% nel browser · zero server</span>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- Avviso se le librerie CDN non si caricano (es. offline) -->
+    <div id="lib-warning" class="lib-warning" role="alert" hidden></div>
+
+    <!-- ================= DASHBOARD ================= -->
+    <section id="dashboard" aria-labelledby="dash-title">
+      <div class="hero">
+        <h1 id="dash-title">Cosa vuoi fare oggi?</h1>
+        <p>I tuoi file non lasciano mai il computer: tutto viene elaborato qui, nella pagina.</p>
+      </div>
+
+      <div class="tool-grid">
+        <a class="tool-card" href="#merge" style="--accent: var(--c-merge)">
+          <svg class="px-icon" viewBox="0 0 16 16" aria-hidden="true" shape-rendering="crispEdges">
+            <rect x="1" y="1" width="8" height="10"/><rect x="2" y="2" width="6" height="8" fill="#fff"/>
+            <rect x="7" y="5" width="8" height="10"/><rect x="8" y="6" width="6" height="8" fill="#fff"/>
+            <rect x="10" y="8" width="2" height="4"/><rect x="9" y="9" width="4" height="2"/>
+          </svg>
+          <h2>Unisci PDF</h2>
+          <p>Combina più PDF in un unico file, nell'ordine che preferisci.</p>
+          <span class="cta">Apri →</span>
+        </a>
+
+        <a class="tool-card" href="#sign" style="--accent: var(--c-sign)">
+          <svg class="px-icon" viewBox="0 0 16 16" aria-hidden="true" shape-rendering="crispEdges">
+            <rect x="1" y="1" width="10" height="14"/><rect x="2" y="2" width="8" height="12" fill="#fff"/>
+            <rect x="3" y="4" width="6" height="1"/><rect x="3" y="6" width="4" height="1"/>
+            <rect x="3" y="11" width="2" height="1"/><rect x="5" y="10" width="1" height="1"/>
+            <rect x="6" y="11" width="1" height="1"/><rect x="7" y="10" width="2" height="1"/>
+            <path d="M14 1h1v2h-1v1h-1v1h-1v1h-1v1h-1v1h-2v-2h1v-1h1v-1h1v-1h1v-1h1v-1h1z"/>
+          </svg>
+          <h2>Firma &amp; Annota</h2>
+          <p>Disegna la firma, aggiungi data e testo e posizionali sul PDF.</p>
+          <span class="cta">Apri →</span>
+        </a>
+
+        <a class="tool-card" href="#img2pdf" style="--accent: var(--c-img2pdf)">
+          <svg class="px-icon" viewBox="0 0 16 16" aria-hidden="true" shape-rendering="crispEdges">
+            <rect x="2" y="1" width="12" height="14"/><rect x="3" y="2" width="10" height="12" fill="#fff"/>
+            <rect x="5" y="4" width="2" height="2"/>
+            <path d="M4 12h8v-2h-1v-1h-1v-1h-1v1h-1v1h-1v-1h-1v1h-1v1h-1z"/>
+          </svg>
+          <h2>Immagini in PDF</h2>
+          <p>Trasforma una o più foto JPG/PNG in un documento PDF.</p>
+          <span class="cta">Apri →</span>
+        </a>
+
+        <a class="tool-card" href="#convert" style="--accent: var(--c-convert)">
+          <svg class="px-icon" viewBox="0 0 16 16" aria-hidden="true" shape-rendering="crispEdges">
+            <rect x="2" y="3" width="9" height="2"/><path d="M10 1h1v1h1v1h1v2h-1v1h-1v1h-1z"/>
+            <rect x="5" y="11" width="9" height="2"/><path d="M6 9h-1v1h-1v1h-1v2h1v1h1v1h1z"/>
+            <rect x="2" y="5" width="2" height="3"/><rect x="12" y="8" width="2" height="3"/>
+          </svg>
+          <h2>Converti &amp; Comprimi</h2>
+          <p>Converti tra JPG, PNG e WebP e riduci il peso delle immagini.</p>
+          <span class="cta">Apri →</span>
+        </a>
+
+        <a class="tool-card" href="#zip" style="--accent: var(--c-zip)">
+          <svg class="px-icon" viewBox="0 0 16 16" aria-hidden="true" shape-rendering="crispEdges">
+            <rect x="1" y="1" width="6" height="3"/>
+            <rect x="1" y="3" width="14" height="12"/><rect x="2" y="4" width="12" height="10" fill="#fff"/>
+            <rect x="7" y="4" width="2" height="1"/><rect x="8" y="5" width="2" height="1"/>
+            <rect x="7" y="6" width="2" height="1"/><rect x="8" y="7" width="2" height="1"/>
+            <rect x="7" y="9" width="3" height="3"/><rect x="8" y="10" width="1" height="1" fill="#fff"/>
+          </svg>
+          <h2>Crea ZIP</h2>
+          <p>Comprimi file e cartelle in un unico archivio .zip.</p>
+          <span class="cta">Apri →</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- ================= TOOL 1: UNISCI PDF ================= -->
+    <section class="workspace" id="tool-merge" data-tool="merge" style="--accent: var(--c-merge)" hidden>
+      <header class="ws-header">
+        <a class="btn btn-small" href="#">← Dashboard</a>
+        <div>
+          <h2 tabindex="-1">Unisci PDF</h2>
+          <p>Aggiungi due o più PDF, mettili in ordine con ▲ ▼ e scarica il file unico.</p>
+        </div>
+      </header>
+
+      <div class="panel">
+        <label class="dropzone">
+          <input type="file" accept="application/pdf,.pdf" multiple class="sr-only">
+          <span class="dz-icon" aria-hidden="true">▲</span>
+          <strong>Trascina qui i PDF</strong>
+          <span>oppure clicca per sceglierli</span>
+        </label>
+
+        <ol class="file-list" data-empty="Nessun PDF aggiunto." aria-label="PDF da unire"></ol>
+
+        <div class="actions">
+          <button class="btn" type="button" data-action="clear">Svuota</button>
+          <button class="btn btn-primary" type="button" data-action="run" disabled>Unisci e scarica</button>
+        </div>
+        <p class="status" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <!-- ================= TOOL 2: FIRMA & ANNOTAZIONI ================= -->
+    <section class="workspace" id="tool-sign" data-tool="sign" style="--accent: var(--c-sign)" hidden>
+      <header class="ws-header">
+        <a class="btn btn-small" href="#">← Dashboard</a>
+        <div>
+          <h2 tabindex="-1">Firma &amp; Annotazioni PDF</h2>
+          <p>Carica un PDF, scegli cosa inserire e clicca sulla pagina per posizionarlo.</p>
+        </div>
+      </header>
+
+      <div class="sign-layout">
+        <!-- Colonna sinistra: controlli -->
+        <aside class="panel sign-sidebar">
+          <h3 class="step-title"><span class="step-num">1</span> Carica il PDF</h3>
+          <label class="dropzone dropzone-compact" id="sign-dropzone">
+            <input type="file" accept="application/pdf,.pdf" class="sr-only">
+            <strong>Trascina o clicca</strong>
+            <span>un solo file PDF</span>
+          </label>
+          <p class="file-pill" id="sign-filename" hidden></p>
+
+          <h3 class="step-title"><span class="step-num">2</span> Cosa vuoi inserire?</h3>
+          <div class="segmented" role="radiogroup" aria-label="Tipo di elemento">
+            <label><input type="radio" name="sign-mode" value="signature" checked><span>✍ Firma</span></label>
+            <label><input type="radio" name="sign-mode" value="date"><span>📅 Data</span></label>
+            <label><input type="radio" name="sign-mode" value="text"><span>🔤 Testo</span></label>
+          </div>
+
+          <!-- Pannello: firma -->
+          <div class="mode-panel" data-mode="signature">
+            <div class="sig-pad-wrap">
+              <canvas id="sig-pad" aria-label="Riquadro per disegnare la firma con mouse, dito o penna"></canvas>
+              <span class="sig-hint">Disegna qui la tua firma</span>
+            </div>
+            <div class="row">
+              <label class="field field-grow">Spessore tratto
+                <input type="range" id="sig-thickness" min="1" max="8" value="3">
+              </label>
+              <button class="btn btn-small" id="sig-clear" type="button">Cancella</button>
+            </div>
+            <label class="field">Larghezza sul PDF: <output id="sig-width-out">160 pt</output>
+              <input type="range" id="sig-width" min="60" max="350" value="160">
+            </label>
+          </div>
+
+          <!-- Pannello: data -->
+          <div class="mode-panel" data-mode="date" hidden>
+            <label class="field">Formato data (oggi)
+              <select id="date-format"></select>
+            </label>
+          </div>
+
+          <!-- Pannello: testo -->
+          <div class="mode-panel" data-mode="text" hidden>
+            <label class="field">Testo da inserire
+              <input type="text" id="text-value" maxlength="200" placeholder="Es. Letto e approvato">
+            </label>
+          </div>
+
+          <!-- Comune a data e testo -->
+          <div class="mode-panel" data-mode="date text" hidden>
+            <label class="field">Dimensione testo: <output id="font-size-out">14 pt</output>
+              <input type="range" id="font-size" min="8" max="48" value="14">
+            </label>
+          </div>
+
+          <label class="field">Colore inchiostro
+            <select id="ink-color">
+              <option value="#000000">Nero</option>
+              <option value="#1f3fbf">Blu</option>
+              <option value="#c0141c">Rosso</option>
+            </select>
+          </label>
+
+          <h3 class="step-title"><span class="step-num">3</span> Clicca sul PDF</h3>
+          <p class="hint">Trascina gli elementi per spostarli. Selezionane uno per cambiarne dimensione o colore; ✕ o tasto Canc per eliminarlo.</p>
+
+          <div class="actions">
+            <button class="btn" type="button" id="sign-reset" disabled>Rimuovi tutto</button>
+            <button class="btn btn-primary" type="button" id="sign-export" disabled>Scarica PDF</button>
+          </div>
+          <p class="status" role="status" aria-live="polite"></p>
+        </aside>
+
+        <!-- Colonna destra: anteprima pagina -->
+        <div class="panel sign-preview">
+          <div class="pager">
+            <button class="btn btn-small" type="button" id="page-prev" aria-label="Pagina precedente" disabled>◀</button>
+            <span id="page-info">—</span>
+            <button class="btn btn-small" type="button" id="page-next" aria-label="Pagina successiva" disabled>▶</button>
+          </div>
+          <div class="stage">
+            <p class="stage-empty">Carica un PDF per vedere qui l'anteprima.</p>
+            <div class="page-wrap" hidden>
+              <canvas id="pdf-canvas"></canvas>
+              <div class="overlay-layer" id="overlay-layer" aria-label="Pagina: clicca per posizionare l'elemento"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TOOL 3: IMMAGINI IN PDF ================= -->
+    <section class="workspace" id="tool-img2pdf" data-tool="img2pdf" style="--accent: var(--c-img2pdf)" hidden>
+      <header class="ws-header">
+        <a class="btn btn-small" href="#">← Dashboard</a>
+        <div>
+          <h2 tabindex="-1">Immagini in PDF</h2>
+          <p>Ogni immagine diventa una pagina. Riordinale con ▲ ▼.</p>
+        </div>
+      </header>
+
+      <div class="panel">
+        <label class="dropzone">
+          <input type="file" accept="image/*" multiple class="sr-only">
+          <span class="dz-icon" aria-hidden="true">▲</span>
+          <strong>Trascina qui le immagini</strong>
+          <span>JPG, PNG, WebP… oppure clicca</span>
+        </label>
+
+        <ol class="file-list" data-empty="Nessuna immagine aggiunta." aria-label="Immagini da convertire"></ol>
+
+        <div class="options">
+          <label class="field">Formato pagina
+            <select id="i2p-size">
+              <option value="a4">A4</option>
+              <option value="fit">Adatta all'immagine</option>
+            </select>
+          </label>
+          <label class="field">Orientamento (A4)
+            <select id="i2p-orient">
+              <option value="auto">Automatico</option>
+              <option value="portrait">Verticale</option>
+              <option value="landscape">Orizzontale</option>
+            </select>
+          </label>
+          <label class="field">Margine
+            <select id="i2p-margin">
+              <option value="0">Nessuno</option>
+              <option value="20">Piccolo</option>
+              <option value="40" selected>Normale</option>
+            </select>
+          </label>
+          <div class="field">
+            <label class="checkbox"><input type="checkbox" id="i2p-recompress" checked> Ricomprimi (PDF più leggero, corregge la rotazione delle foto da smartphone)</label>
+            <label class="field">Qualità: <output id="i2p-quality-out">85%</output>
+              <input type="range" id="i2p-quality" min="30" max="100" value="85">
+            </label>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn" type="button" data-action="clear">Svuota</button>
+          <button class="btn btn-primary" type="button" data-action="run" disabled>Crea PDF</button>
+        </div>
+        <p class="status" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <!-- ================= TOOL 4: CONVERTI & COMPRIMI ================= -->
+    <section class="workspace" id="tool-convert" data-tool="convert" style="--accent: var(--c-convert)" hidden>
+      <header class="ws-header">
+        <a class="btn btn-small" href="#">← Dashboard</a>
+        <div>
+          <h2 tabindex="-1">Convertitore &amp; Compressore Immagini</h2>
+          <p>Scegli il formato di uscita, la qualità e (se vuoi) una dimensione massima.</p>
+        </div>
+      </header>
+
+      <div class="panel">
+        <label class="dropzone">
+          <input type="file" accept="image/*" multiple class="sr-only">
+          <span class="dz-icon" aria-hidden="true">▲</span>
+          <strong>Trascina qui le immagini</strong>
+          <span>oppure clicca per sceglierle</span>
+        </label>
+
+        <ol class="file-list" data-empty="Nessuna immagine aggiunta." aria-label="Immagini da convertire"></ol>
+
+        <div class="options">
+          <label class="field">Converti in
+            <select id="cv-format">
+              <option value="image/jpeg">JPG</option>
+              <option value="image/png">PNG</option>
+              <option value="image/webp" selected>WebP</option>
+            </select>
+          </label>
+          <label class="field">Qualità: <output id="cv-quality-out">75%</output>
+            <input type="range" id="cv-quality" min="10" max="100" value="75">
+          </label>
+          <label class="field">Lato lungo max (px)
+            <input type="number" id="cv-maxside" min="0" step="10" placeholder="Originale">
+          </label>
+        </div>
+        <p class="hint">PNG è senza perdita: la qualità non si applica. Per ridurre molto il peso usa JPG o WebP.</p>
+
+        <div class="actions">
+          <button class="btn" type="button" data-action="clear">Svuota</button>
+          <button class="btn btn-primary" type="button" data-action="run" disabled>Converti</button>
+        </div>
+        <p class="status" role="status" aria-live="polite"></p>
+
+        <ul class="result-list" aria-label="Risultati"></ul>
+        <div class="actions">
+          <button class="btn btn-dark" type="button" id="cv-zip" hidden>Scarica tutto (.zip)</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TOOL 5: CREA ZIP ================= -->
+    <section class="workspace" id="tool-zip" data-tool="zip" style="--accent: var(--c-zip)" hidden>
+      <header class="ws-header">
+        <a class="btn btn-small" href="#">← Dashboard</a>
+        <div>
+          <h2 tabindex="-1">Crea Archivio ZIP</h2>
+          <p>Aggiungi file o intere cartelle: la struttura delle cartelle viene mantenuta.</p>
+        </div>
+      </header>
+
+      <div class="panel">
+        <label class="dropzone">
+          <input type="file" multiple class="sr-only">
+          <span class="dz-icon" aria-hidden="true">▲</span>
+          <strong>Trascina qui file o cartelle</strong>
+          <span>oppure clicca per scegliere i file</span>
+        </label>
+        <div class="actions actions-left">
+          <label class="btn btn-small">
+            📁 Aggiungi cartella
+            <input type="file" id="zip-folder" webkitdirectory multiple class="sr-only">
+          </label>
+          <span class="hint" id="zip-summary"></span>
+        </div>
+
+        <ol class="file-list" data-empty="Nessun file aggiunto." aria-label="File da archiviare"></ol>
+
+        <div class="options">
+          <label class="field">Nome archivio
+            <input type="text" id="zip-name" value="archivio" maxlength="80">
+          </label>
+          <label class="field">Compressione: <output id="zip-level-out">6</output>
+            <input type="range" id="zip-level" min="0" max="9" value="6">
+          </label>
+        </div>
+        <p class="hint">0 = solo archivia (velocissimo) · 9 = massima compressione. Foto, video e PDF di solito non si riducono molto: sono già compressi.</p>
+
+        <div class="progress" hidden><div class="progress-bar"></div></div>
+
+        <div class="actions">
+          <button class="btn" type="button" data-action="clear">Svuota</button>
+          <button class="btn btn-primary" type="button" data-action="run" disabled>Crea ZIP</button>
+        </div>
+        <p class="status" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      PixelTools · nessun upload, nessun tracciamento · i file restano sul tuo dispositivo
+    </div>
+  </footer>
+</body>
+</html>
