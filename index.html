@@ -106,6 +106,20 @@
           <p>Comprimi file e cartelle in un unico archivio .zip.</p>
           <span class="cta">Apri →</span>
         </a>
+
+        <a class="tool-card" href="#crochet" style="--accent: var(--c-crochet)">
+          <svg class="px-icon" viewBox="0 0 16 16" aria-hidden="true" shape-rendering="crispEdges">
+            <rect x="5" y="4" width="5" height="1"/><rect x="4" y="5" width="1" height="1"/><rect x="10" y="5" width="1" height="1"/>
+            <rect x="3" y="6" width="1" height="4"/><rect x="11" y="6" width="1" height="4"/>
+            <rect x="4" y="10" width="1" height="1"/><rect x="10" y="10" width="1" height="1"/><rect x="5" y="11" width="5" height="1"/>
+            <rect x="5" y="6" width="1" height="1"/><rect x="6" y="7" width="1" height="1"/><rect x="7" y="8" width="1" height="1"/><rect x="8" y="9" width="1" height="1"/>
+            <rect x="7" y="6" width="1" height="1"/><rect x="8" y="7" width="1" height="1"/><rect x="9" y="8" width="1" height="1"/>
+            <rect x="13" y="3" width="1" height="12"/><rect x="14" y="2" width="1" height="1"/><rect x="12" y="4" width="1" height="1"/>
+          </svg>
+          <h2>Foto in Uncinetto</h2>
+          <p>Trasforma una foto in uno schema per uncinetto: C2C, filet o punto basso.</p>
+          <span class="cta">Apri →</span>
+        </a>
       </div>
     </section>
 
@@ -390,6 +404,99 @@
           <button class="btn btn-primary" type="button" data-action="run" disabled>Crea ZIP</button>
         </div>
         <p class="status" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <!-- ================= TOOL 6: FOTO IN UNCINETTO ================= -->
+    <section class="workspace" id="tool-crochet" data-tool="crochet" style="--accent: var(--c-crochet)" hidden>
+      <header class="ws-header">
+        <a class="btn btn-small" href="#">← Dashboard</a>
+        <div>
+          <h2 tabindex="-1">Foto in Uncinetto</h2>
+          <p>Carica una foto, scegli tecnica, dimensione e colori: lo schema si aggiorna da solo.</p>
+        </div>
+      </header>
+
+      <div class="tool-layout">
+        <!-- Colonna sinistra: controlli -->
+        <aside class="panel tool-sidebar">
+          <h3 class="step-title"><span class="step-num">1</span> La tua foto</h3>
+          <label class="dropzone dropzone-compact" id="cr-dropzone">
+            <input type="file" accept="image/*" class="sr-only">
+            <strong>Trascina o clicca</strong>
+            <span>una foto JPG, PNG o WebP</span>
+          </label>
+          <p class="file-pill" id="cr-filename" hidden></p>
+
+          <h3 class="step-title"><span class="step-num">2</span> Tecnica</h3>
+          <div class="choice-list" role="radiogroup" aria-label="Tecnica">
+            <label><input type="radio" name="cr-tech" value="c2c" checked><span><strong>C2C / Tapestry</strong><small>Schema a colori, quadretti</small></span></label>
+            <label><input type="radio" name="cr-tech" value="filet"><span><strong>Filet</strong><small>Solo pieno / vuoto</small></span></label>
+            <label><input type="radio" name="cr-tech" value="sc"><span><strong>Punto basso</strong><small>Corregge la proporzione del punto</small></span></label>
+          </div>
+
+          <h3 class="step-title"><span class="step-num">3</span> Dimensione e colori</h3>
+          <div class="field-row">
+            <label class="field">Larghezza (punti)
+              <input type="number" id="cr-width" min="10" max="200" step="1" value="40">
+            </label>
+            <div class="field">Altezza (righe)
+              <output id="cr-rows" class="readout">—</output>
+            </div>
+          </div>
+
+          <!-- C2C e punto basso: numero di colori -->
+          <div class="tech-panel" data-show="c2c sc">
+            <label class="field">Numero di colori: <output id="cr-colors-out">6</output>
+              <input type="range" id="cr-colors" min="2" max="16" value="6">
+            </label>
+          </div>
+
+          <!-- Filet: soglia chiaro/scuro -->
+          <div class="tech-panel" data-show="filet" hidden>
+            <label class="field">Soglia chiaro/scuro: <output id="cr-threshold-out">128</output>
+              <input type="range" id="cr-threshold" min="10" max="245" value="128">
+            </label>
+            <label class="checkbox"><input type="checkbox" id="cr-invert"> Inverti pieno e vuoto</label>
+          </div>
+
+          <!-- Punto basso: campione (gauge) -->
+          <div class="tech-panel" data-show="sc" hidden>
+            <p class="hint">Il tuo campione: quanti punti e quante righe entrano in 10 cm. Serve a non far uscire il lavoro schiacciato.</p>
+            <div class="field-row">
+              <label class="field">Punti in 10 cm
+                <input type="number" id="cr-gauge-st" min="1" max="100" value="20">
+              </label>
+              <label class="field">Righe in 10 cm
+                <input type="number" id="cr-gauge-rows" min="1" max="100" value="24">
+              </label>
+            </div>
+          </div>
+
+          <label class="checkbox"><input type="checkbox" id="cr-symbols" checked> Mostra le lettere dei colori sulla griglia</label>
+          <p class="hint" id="cr-tech-hint"></p>
+
+          <div class="actions">
+            <button class="btn" type="button" id="cr-png" disabled>Scarica PNG</button>
+            <button class="btn btn-primary" type="button" id="cr-pdf" disabled>Scarica schema PDF</button>
+          </div>
+          <p class="status" role="status" aria-live="polite"></p>
+        </aside>
+
+        <!-- Colonna destra: anteprima schema e legenda -->
+        <div class="panel cr-preview">
+          <div class="cr-preview-head">
+            <h3>Anteprima schema</h3>
+            <span class="cr-info" id="cr-info">—</span>
+          </div>
+          <div class="stage cr-stage">
+            <p class="stage-empty">Carica una foto per vedere qui lo schema.</p>
+            <canvas id="cr-canvas" hidden aria-label="Schema per uncinetto"></canvas>
+          </div>
+          <h3 class="cr-legend-title">Legenda filati</h3>
+          <ul class="cr-legend" id="cr-legend" data-empty="La legenda apparirà qui."></ul>
+          <p class="hint">Le righe si contano dal basso (riga 1). Linee grigie ogni 5 punti, linee nere ogni 10.</p>
+        </div>
       </div>
     </section>
   </main>
