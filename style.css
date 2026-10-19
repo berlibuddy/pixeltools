@@ -539,14 +539,18 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* ---------- 7. Tool Firma ---------- */
-.sign-layout {
+/* Layout a due colonne (controlli + anteprima): usato da Firma e Uncinetto */
+.sign-layout,
+.tool-layout {
   display: grid;
   grid-template-columns: minmax(300px, 370px) minmax(0, 1fr);
   gap: 24px;
   align-items: start;
 }
-.sign-sidebar { display: flex; flex-direction: column; gap: 14px; }
-.sign-sidebar .actions { margin-top: 4px; }
+.sign-sidebar,
+.tool-sidebar { display: flex; flex-direction: column; gap: 14px; }
+.sign-sidebar .actions,
+.tool-sidebar .actions { margin-top: 4px; }
 
 .step-title { display: flex; align-items: center; gap: 10px; margin: 6px 0 0; font-size: 1rem; font-weight: 600; }
 .step-num {
@@ -593,7 +597,8 @@ input[type="range"]::-moz-range-thumb {
 .segmented input:checked + span { background: var(--ink); color: var(--paper); font-weight: 600; }
 .segmented input:focus-visible + span { outline: 2px dashed var(--ink); outline-offset: -5px; }
 
-.mode-panel { display: flex; flex-direction: column; gap: 12px; }
+.mode-panel,
+.tech-panel { display: flex; flex-direction: column; gap: 12px; }
 
 .sig-pad-wrap {
   position: relative;
@@ -698,16 +703,128 @@ input[type="range"]::-moz-range-thumb {
 .placed:hover .placed-del,
 .placed.is-selected .placed-del { display: block; }
 
-/* ---------- 8. Responsive ---------- */
+/* ---------- 8. Tool Uncinetto ---------- */
+/* Lista di scelte (tecnica): la scelta attiva diventa nera */
+.choice-list {
+  display: flex;
+  flex-direction: column;
+  border: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.choice-list label { cursor: pointer; }
+.choice-list label + label span { border-top: var(--border); }
+.choice-list input { position: absolute; opacity: 0; pointer-events: none; }
+.choice-list span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px;
+  background: var(--paper);
+}
+.choice-list strong { font-size: .9rem; font-weight: 600; }
+.choice-list small { font-size: .78rem; color: var(--muted); }
+.choice-list input:checked + span { background: var(--ink); color: var(--paper); }
+.choice-list input:checked + span small { color: #d0d0d0; }
+.choice-list input:focus-visible + span { outline: 2px dashed var(--ink); outline-offset: -5px; }
+
+.field-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.field .readout { /* "casella" in sola lettura (vince sullo stile di .field output) */
+  display: block;
+  align-self: stretch;
+  color: var(--ink);
+  padding: 9px 10px;
+  font-size: .95rem;
+  font-weight: 500;
+  background: var(--paper-2);
+  border: 1.5px dashed #9a9a9a;
+  border-radius: 2px;
+}
+
+.cr-preview { padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.cr-preview-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+.cr-preview-head h3,
+.cr-legend-title {
+  margin: 0;
+  font-family: var(--font-pixel);
+  font-size: 1.9rem;
+  font-weight: 400;
+  line-height: 1;
+}
+.cr-info {
+  padding: 4px 10px;
+  font-size: .8rem;
+  font-weight: 500;
+  border: var(--border);
+  border-radius: 2px;
+}
+.cr-stage {
+  justify-content: safe center; /* se lo schema è largo, si scorre senza tagliare il bordo sinistro */
+  min-height: 360px;
+}
+#cr-canvas {
+  display: block;
+  flex-shrink: 0;
+  border: 1px solid var(--ink);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Legenda filati */
+.cr-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 8px;
+}
+.cr-legend:empty::before {
+  content: attr(data-empty);
+  display: block;
+  padding: 12px;
+  font-size: .9rem;
+  color: var(--muted);
+  border: 1.5px dashed #c4c4c4;
+  border-radius: var(--radius);
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--paper);
+  border: var(--border);
+  border-radius: 2px;
+}
+.legend-swatch {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border: var(--border);
+  border-radius: 2px;
+}
+.legend-letter { width: 1.2ch; font-family: var(--font-pixel); font-size: 1.35rem; line-height: 1; }
+.legend-name { flex: 1; min-width: 0; display: flex; flex-direction: column; font-size: .9rem; }
+.legend-name small { font-size: .72rem; color: var(--muted); }
+.legend-count { font-size: .85rem; font-weight: 600; white-space: nowrap; }
+
+/* ---------- 9. Responsive ---------- */
 @media (max-width: 900px) {
-  .sign-layout { grid-template-columns: 1fr; }
+  .sign-layout,
+  .tool-layout { grid-template-columns: minmax(0, 1fr); } /* minmax: uno schema largo non allarga la pagina */
   .stage { min-height: 300px; padding: 10px; }
 }
 @media (max-width: 600px) {
   html { font-size: 15px; }
   .hero h1 { font-size: 3.2rem; }
   .ws-header h2 { font-size: 2.3rem; }
-  .ws-header { flex-direction: column; gap: 10px; }
+  .ws-header { flex-direction: column; align-items: flex-start; gap: 10px; }
   .file-item { grid-template-columns: auto 40px minmax(0, 1fr); }
   .file-item .file-actions { grid-column: 1 / -1; justify-content: flex-end; }
   .result-item { grid-template-columns: 40px minmax(0, 1fr); }
