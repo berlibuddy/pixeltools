@@ -814,6 +814,59 @@ input[type="range"]::-moz-range-thumb {
 .legend-name small { font-size: .72rem; color: var(--muted); }
 .legend-count { font-size: .85rem; font-weight: 600; white-space: nowrap; }
 
+/* ---------- 8b. Tool Pixel Art ---------- */
+/* Scacchiera grigia: si vede dove l'immagine è trasparente */
+.px-stage {
+  background-color: #e7e7e7;
+  background-image:
+    linear-gradient(45deg, #d6d6d6 25%, transparent 25%, transparent 75%, #d6d6d6 75%),
+    linear-gradient(45deg, #d6d6d6 25%, transparent 25%, transparent 75%, #d6d6d6 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 8px 8px;
+}
+#px-canvas {
+  display: block;
+  flex-shrink: 0;
+  image-rendering: pixelated; /* niente sfocatura quando si ingrandisce */
+  border: 1px solid var(--ink);
+  box-shadow: var(--shadow-lg);
+}
+.checkbox .hint { font-size: .78rem; }
+
+.px-palette {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.px-palette:empty::before {
+  content: attr(data-empty);
+  display: block;
+  width: 100%;
+  padding: 12px;
+  font-size: .9rem;
+  color: var(--muted);
+  border: 1.5px dashed #c4c4c4;
+  border-radius: var(--radius);
+}
+.px-swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 64px;
+  font-size: .68rem;
+  color: var(--muted);
+}
+.px-swatch span {
+  width: 40px;
+  height: 40px;
+  border: var(--border);
+  border-radius: 2px;
+}
+
 /* ---------- 9. Responsive ---------- */
 @media (max-width: 900px) {
   .sign-layout,

@@ -120,6 +120,17 @@
           <p>Trasforma una foto in uno schema per uncinetto: C2C, filet o punto basso.</p>
           <span class="cta">Apri →</span>
         </a>
+
+        <a class="tool-card" href="#pixel" style="--accent: var(--c-pixel)">
+          <svg class="px-icon" viewBox="0 0 16 16" aria-hidden="true" shape-rendering="crispEdges">
+            <path fill-rule="evenodd" d="M1 1h14v14h-14zM2 2v12h12v-12z"/>
+            <rect x="5" y="5" width="2" height="2"/><rect x="9" y="5" width="2" height="2"/>
+            <rect x="4" y="9" width="1" height="1"/><rect x="5" y="10" width="6" height="1"/><rect x="11" y="9" width="1" height="1"/>
+          </svg>
+          <h2>Foto in Pixel Art</h2>
+          <p>Palette retrò, dithering e contorno. Ripulisce anche la pixel art fatta con l'AI.</p>
+          <span class="cta">Apri →</span>
+        </a>
       </div>
     </section>
 
@@ -496,6 +507,125 @@
           <h3 class="cr-legend-title">Legenda filati</h3>
           <ul class="cr-legend" id="cr-legend" data-empty="La legenda apparirà qui."></ul>
           <p class="hint">Le righe si contano dal basso (riga 1). Linee grigie ogni 5 punti, linee nere ogni 10.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TOOL 7: FOTO IN PIXEL ART ================= -->
+    <section class="workspace" id="tool-pixel" data-tool="pixel" style="--accent: var(--c-pixel)" hidden>
+      <header class="ws-header">
+        <a class="btn btn-small" href="#">← Dashboard</a>
+        <div>
+          <h2 tabindex="-1">Foto in Pixel Art</h2>
+          <p>Trasforma una foto in pixel art, oppure ripulisci la pixel art "sporca" fatta con l'AI.</p>
+        </div>
+      </header>
+
+      <div class="tool-layout">
+        <!-- Colonna sinistra: controlli -->
+        <aside class="panel tool-sidebar">
+          <h3 class="step-title"><span class="step-num">1</span> La tua immagine</h3>
+          <label class="dropzone dropzone-compact" id="px-dropzone">
+            <input type="file" accept="image/*" class="sr-only">
+            <strong>Trascina o clicca</strong>
+            <span>JPG, PNG (anche trasparente) o WebP</span>
+          </label>
+          <p class="file-pill" id="px-filename" hidden></p>
+
+          <h3 class="step-title"><span class="step-num">2</span> Cosa vuoi fare?</h3>
+          <div class="choice-list" role="radiogroup" aria-label="Modalità">
+            <label><input type="radio" name="px-mode" value="photo" checked><span><strong>Foto → pixel art</strong><small>Rimpicciolisce e riduce i colori</small></span></label>
+            <label><input type="radio" name="px-mode" value="clean"><span><strong>Ripulisci pixel art AI</strong><small>Riallinea alla griglia e pulisce i colori</small></span></label>
+          </div>
+
+          <h3 class="step-title"><span class="step-num">3</span> Dimensione</h3>
+          <!-- Foto: larghezza in pixel -->
+          <div class="tech-panel" data-show="photo">
+            <div class="field-row">
+              <label class="field">Larghezza (pixel)
+                <input type="number" id="px-width" min="8" max="256" step="1" value="64">
+              </label>
+              <div class="field">Altezza (pixel)
+                <output id="px-height" class="readout">—</output>
+              </div>
+            </div>
+          </div>
+          <!-- Ripulisci: dimensione di un "pixel" dell'immagine AI -->
+          <div class="tech-panel" data-show="clean" hidden>
+            <div class="field-row">
+              <label class="field">Grandezza di un pixel (px)
+                <input type="number" id="px-cell" min="1" max="64" step="1" value="8">
+              </label>
+              <div class="field">Griglia trovata
+                <output id="px-grid" class="readout">—</output>
+              </div>
+            </div>
+            <div class="row">
+              <button class="btn btn-small" type="button" id="px-detect" disabled>Rileva in automatico</button>
+              <span class="hint" id="px-detect-info"></span>
+            </div>
+          </div>
+
+          <h3 class="step-title"><span class="step-num">4</span> Colori e stile</h3>
+          <label class="field">Palette
+            <select id="px-palette">
+              <option value="auto">Automatica (dai colori dell'immagine)</option>
+              <option value="gameboy">Game Boy · 4 verdi</option>
+              <option value="pico8">PICO-8 · 16 colori</option>
+              <option value="endesga32">Endesga 32 · 32 colori</option>
+              <option value="bw">Bianco e nero · 2 colori</option>
+            </select>
+          </label>
+          <div class="tech-panel" id="px-colors-panel">
+            <label class="field">Numero di colori: <output id="px-colors-out">16</output>
+              <input type="range" id="px-colors" min="2" max="32" value="16">
+            </label>
+          </div>
+          <div class="tech-panel" data-show="photo">
+            <label class="field">Dithering (retinatura a puntini)
+              <select id="px-dither">
+                <option value="none">Nessuno · colori pieni</option>
+                <option value="bayer">Ordinato · stile retrò</option>
+                <option value="fs">Diffuso · più sfumato</option>
+              </select>
+            </label>
+          </div>
+          <label class="checkbox"><input type="checkbox" id="px-outline" disabled> Contorno scuro attorno al soggetto <small class="hint">(solo con sfondo trasparente)</small></label>
+
+          <h3 class="step-title"><span class="step-num">5</span> Scarica</h3>
+          <div class="field-row">
+            <label class="field">Ingrandimento
+              <select id="px-scale">
+                <option value="1">×1 · originale</option>
+                <option value="2">×2</option>
+                <option value="4">×4</option>
+                <option value="8" selected>×8</option>
+                <option value="16">×16</option>
+              </select>
+            </label>
+            <div class="field">Dimensione finale
+              <output id="px-out-size" class="readout">—</output>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" type="button" id="px-download" disabled>Scarica PNG</button>
+          </div>
+          <p class="status" role="status" aria-live="polite"></p>
+        </aside>
+
+        <!-- Colonna destra: anteprima -->
+        <div class="panel cr-preview">
+          <div class="cr-preview-head">
+            <h3>Anteprima</h3>
+            <span class="cr-info" id="px-info">—</span>
+          </div>
+          <div class="stage cr-stage px-stage">
+            <p class="stage-empty">Carica un'immagine per vedere qui la pixel art.</p>
+            <canvas id="px-canvas" hidden aria-label="Anteprima pixel art"></canvas>
+          </div>
+          <label class="checkbox"><input type="checkbox" id="px-grid-toggle"> Mostra la griglia dei pixel</label>
+          <h3 class="cr-legend-title">Palette usata</h3>
+          <ul class="px-palette" id="px-swatches" data-empty="La palette apparirà qui."></ul>
         </div>
       </div>
     </section>
