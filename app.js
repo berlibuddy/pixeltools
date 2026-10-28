@@ -29,6 +29,7 @@
    import { luma, toHex, parseHex, colorDist, nearestColor, boxSample, quantize } from './src/core/pixel-engine.js';
    import { $, $$, h, clamp } from './src/core/dom.js';
    import { formatBytes, baseName, extOf, isPdf, isImage, downloadBlob, uniqueName, pathOf, filesFromDrop } from './src/core/files.js';
+   import { loadBitmap, fileToCanvas, canvasToBlob, canEncode } from './src/core/images.js';
 
    /* =============================================================
       0. CONFIGURAZIONE
@@ -75,65 +76,6 @@
        button.disabled = false;
        button.innerHTML = originalLabel;
      }
-   }
-   
-   /* ---------- Utility per immagini (Canvas API) ---------- */
-   
-   /**
-    * Decodifica un file immagine. createImageBitmap è veloce e applica
-    * l'orientamento EXIF (foto da smartphone); in caso di problemi usa <img>.
-    */
-   async function loadBitmap(file) {
-     if ('createImageBitmap' in window) {
-       try { return await createImageBitmap(file, { imageOrientation: 'from-image' }); } catch { /* fallback sotto */ }
-     }
-     return new Promise((resolve, reject) => {
-       const url = URL.createObjectURL(file);
-       const img = new Image();
-       img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
-       img.onerror = () => { URL.revokeObjectURL(url); reject(new Error(`Impossibile leggere l'immagine "${file.name}".`)); };
-       img.src = url;
-     });
-   }
-   
-   /**
-    * Disegna un'immagine su un canvas, opzionalmente ridimensionandola
-    * (maxSide = lato lungo massimo in px) e con uno sfondo (utile per JPG,
-    * che non supporta la trasparenza).
-    */
-   async function fileToCanvas(file, { maxSide = 0, background = null } = {}) {
-     const src = await loadBitmap(file);
-     let w = src.naturalWidth || src.width;
-     let hgt = src.naturalHeight || src.height;
-     const longest = Math.max(w, hgt);
-     if (maxSide > 0 && longest > maxSide) {
-       const ratio = maxSide / longest;
-       w = Math.round(w * ratio);
-       hgt = Math.round(hgt * ratio);
-     }
-     const canvas = document.createElement('canvas');
-     canvas.width = w;
-     canvas.height = hgt;
-     const ctx = canvas.getContext('2d');
-     if (background) { ctx.fillStyle = background; ctx.fillRect(0, 0, w, hgt); }
-     ctx.imageSmoothingQuality = 'high';
-     ctx.drawImage(src, 0, 0, w, hgt);
-     src.close?.(); // libera memoria (solo ImageBitmap)
-     return canvas;
-   }
-   
-   /** canvas.toBlob in versione Promise */
-   function canvasToBlob(canvas, type, quality) {
-     return new Promise((resolve, reject) => {
-       canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Conversione immagine fallita.'))), type, quality);
-     });
-   }
-   
-   /** Il browser sa codificare questo formato? (es. WebP su vecchi Safari no) */
-   function canEncode(type) {
-     const c = document.createElement('canvas');
-     c.width = c.height = 1;
-     return c.toDataURL(type).startsWith(`data:${type}`);
    }
    
    /* =============================================================
