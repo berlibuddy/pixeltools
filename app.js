@@ -28,6 +28,7 @@
 
    import { luma, toHex, parseHex, colorDist, nearestColor, boxSample, quantize } from './src/core/pixel-engine.js';
    import { $, $$, h, clamp } from './src/core/dom.js';
+   import { formatBytes, baseName, extOf, isPdf, isImage, downloadBlob, uniqueName, pathOf, filesFromDrop } from './src/core/files.js';
 
    /* =============================================================
       0. CONFIGURAZIONE
@@ -42,32 +43,6 @@
    /* =============================================================
       1. UTILITY GENERICHE
       ============================================================= */
-   
-   /** 1536000 → "1.5 MB" */
-   function formatBytes(bytes) {
-     if (bytes < 1024) return `${bytes} B`;
-     const units = ['KB', 'MB', 'GB'];
-     let value = bytes / 1024;
-     let i = 0;
-     while (value >= 1024 && i < units.length - 1) { value /= 1024; i++; }
-     return `${value.toFixed(value < 10 ? 1 : 0)} ${units[i]}`;
-   }
-   
-   const baseName = (name) => name.replace(/\.[^./]+$/, '');            // "foto.jpg" → "foto"
-   const extOf = (name) => (name.match(/\.([^./]+)$/)?.[1] || '').toLowerCase();
-   const isPdf = (f) => f.type === 'application/pdf' || extOf(f.name) === 'pdf';
-   const isImage = (f) => f.type.startsWith('image/');
-   
-   /** Fa scaricare un Blob come file */
-   function downloadBlob(blob, filename) {
-     const url = URL.createObjectURL(blob);
-     const a = h('a', { href: url, download: filename });
-     document.body.append(a);
-     a.click();
-     a.remove();
-     // Il browser ha bisogno di un attimo prima di poter liberare l'URL
-     setTimeout(() => URL.revokeObjectURL(url), 10_000);
-   }
    
    /** Mostra un messaggio nella riga di stato di uno strumento */
    function setStatus(el, message = '', type = 'info') {
@@ -100,21 +75,6 @@
        button.disabled = false;
        button.innerHTML = originalLabel;
      }
-   }
-   
-   /** Evita nomi duplicati: "foto.jpg" → "foto (2).jpg" */
-   function uniqueName(name, used) {
-     if (!used.has(name)) { used.add(name); return name; }
-     const dot = name.lastIndexOf('.');
-     const slash = name.lastIndexOf('/');
-     const hasExt = dot > slash + 1;
-     const stem = hasExt ? name.slice(0, dot) : name;
-     const ext = hasExt ? name.slice(dot) : '';
-     let i = 2;
-     let candidate;
-     do { candidate = `${stem} (${i++})${ext}`; } while (used.has(candidate));
-     used.add(candidate);
-     return candidate;
    }
    
    /* ---------- Utility per immagini (Canvas API) ---------- */
@@ -180,10 +140,6 @@
       2. COMPONENTI RIUTILIZZABILI
       ============================================================= */
    
-   /* Percorsi relativi dei file presi da cartelle trascinate (per lo ZIP) */
-   const relPaths = new WeakMap();
-   const pathOf = (f) => relPaths.get(f) || f.webkitRelativePath || f.name;
-   
    /**
     * Collega una dropzone (<label class="dropzone"> con un <input type=file> dentro).
     * Gestisce sia il click (selettore file) sia il drag & drop.
@@ -205,37 +161,6 @@
        const files = allowFolders ? await filesFromDrop(e.dataTransfer) : Array.from(e.dataTransfer.files);
        if (files.length) onFiles(files);
      });
-   }
-   
-   /** Legge ricorsivamente le cartelle trascinate, salvando il percorso relativo */
-   async function filesFromDrop(dataTransfer) {
-     // Le "entry" vanno lette SUBITO: dopo il primo await il DataTransfer non è più valido
-     const entries = Array.from(dataTransfer.items || [])
-       .map((item) => item.webkitGetAsEntry?.())
-       .filter(Boolean);
-     if (!entries.length) return Array.from(dataTransfer.files);
-   
-     const out = [];
-     const readFile = (entry) => new Promise((res, rej) => entry.file(res, rej));
-     const readBatch = (reader) => new Promise((res, rej) => reader.readEntries(res, rej));
-   
-     async function walk(entry, prefix) {
-       if (entry.isFile) {
-         const file = await readFile(entry);
-         relPaths.set(file, prefix + file.name);
-         out.push(file);
-       } else if (entry.isDirectory) {
-         const reader = entry.createReader();
-         const dir = `${prefix}${entry.name}/`;
-         let batch;
-         do { // readEntries restituisce al massimo ~100 voci per volta
-           batch = await readBatch(reader);
-           for (const child of batch) await walk(child, dir);
-         } while (batch.length);
-       }
-     }
-     for (const entry of entries) await walk(entry, '');
-     return out;
    }
    
    /**
