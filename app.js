@@ -27,6 +27,7 @@
    'use strict';
 
    import { luma, toHex, parseHex, colorDist, nearestColor, boxSample, quantize } from './src/core/pixel-engine.js';
+   import { $, $$, h, clamp } from './src/core/dom.js';
 
    /* =============================================================
       0. CONFIGURAZIONE
@@ -42,27 +43,6 @@
       1. UTILITY GENERICHE
       ============================================================= */
    
-   /** Scorciatoie per selezionare elementi */
-   const $ = (sel, root = document) => root.querySelector(sel);
-   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
-   
-   /**
-    * Crea un elemento DOM in modo sicuro (niente innerHTML con dati utente).
-    * h('button', { class: 'btn', type: 'button' }, 'Testo')
-    */
-   function h(tag, props = {}, ...children) {
-     const el = document.createElement(tag);
-     for (const [key, value] of Object.entries(props)) {
-       if (value === false || value == null) continue;
-       if (key === 'class') el.className = value;
-       else if (key === 'dataset') Object.assign(el.dataset, value);
-       else if (key.startsWith('on') && typeof value === 'function') el.addEventListener(key.slice(2), value);
-       else el.setAttribute(key, value === true ? '' : value);
-     }
-     el.append(...children.flat().filter((c) => c != null && c !== false));
-     return el;
-   }
-   
    /** 1536000 → "1.5 MB" */
    function formatBytes(bytes) {
      if (bytes < 1024) return `${bytes} B`;
@@ -73,7 +53,6 @@
      return `${value.toFixed(value < 10 ? 1 : 0)} ${units[i]}`;
    }
    
-   const clamp = (v, min, max) => Math.min(Math.max(v, min), Math.max(min, max));
    const baseName = (name) => name.replace(/\.[^./]+$/, '');            // "foto.jpg" → "foto"
    const extOf = (name) => (name.match(/\.([^./]+)$/)?.[1] || '').toLowerCase();
    const isPdf = (f) => f.type === 'application/pdf' || extOf(f.name) === 'pdf';
