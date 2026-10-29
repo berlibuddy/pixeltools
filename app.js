@@ -62,9 +62,48 @@
    };
    const toolHooks = {}; // funzioni da chiamare quando un tool diventa visibile
    
-   function route() {
+   /**
+    * Tool "a richiesta" (Passo 3): ognuno vive in src/tools/<tool>/ e viene
+    * scaricato solo la prima volta che lo apri. tool.js esporta:
+    *   view → il markup (view.html) · init(ws) → collega i comandi
+    * I tool non ancora spostati restano qui sotto in app.js e in index.html.
+    */
+   const LAZY_TOOLS = {
+     merge: () => import('./src/tools/merge/tool.js'),
+   };
+   const loadingTools = {}; // id → Promise: ogni tool si carica una volta sola
+   
+   function loadTool(id) {
+     if (!LAZY_TOOLS[id]) return Promise.resolve();
+     loadingTools[id] ??= LAZY_TOOLS[id]().then(({ view, init }) => {
+       const tpl = document.createElement('template');
+       tpl.innerHTML = view; // markup statico nostro (view.html): sicuro
+       const ws = tpl.content.querySelector('.workspace');
+       $('main').append(ws);
+       init(ws);
+     }).catch((err) => {
+       delete loadingTools[id]; // al prossimo tentativo riprova da capo
+       throw err;
+     });
+     return loadingTools[id];
+   }
+   
+   async function route() {
      const id = location.hash.slice(1);
-     const active = id in TOOL_TITLES ? id : null;
+     let active = id in TOOL_TITLES ? id : null;
+   
+     if (active) {
+       try {
+         await loadTool(active);
+       } catch (err) {
+         console.error(err);
+         const banner = $('#lib-warning');
+         banner.textContent = '⚠ Non riesco ad aprire questo strumento. Controlla la connessione e ricarica la pagina.';
+         banner.hidden = false;
+         active = null; // resta sulla dashboard
+       }
+       if (location.hash.slice(1) !== id) return; // nel frattempo hai già cambiato pagina
+     }
    
      $('#dashboard').hidden = Boolean(active);
      $$('.workspace').forEach((ws) => { ws.hidden = ws.dataset.tool !== active; });
@@ -78,49 +117,8 @@
    }
    
    /* =============================================================
-      4. TOOL 1 — UNISCI PDF
+      4. TOOL 1 — UNISCI PDF → spostato in src/tools/merge/ (tool.js + view.html)
       ============================================================= */
-   function initMerge() {
-     const ws = $('#tool-merge');
-     const status = $('.status', ws);
-     const runBtn = $('[data-action="run"]', ws);
-   
-     const queue = new FileQueue($('.file-list', ws), {
-       onChange: (q) => { runBtn.disabled = q.size < 2; },
-     });
-   
-     setupDropzone($('.dropzone', ws), (files) => {
-       const pdfs = files.filter(isPdf);
-       const skipped = files.length - pdfs.length;
-       setStatus(status, skipped ? `⚠ ${skipped} file ignorati: non sono PDF.` : '', 'warn');
-       queue.add(pdfs);
-     });
-   
-     $('[data-action="clear"]', ws).addEventListener('click', () => { queue.clear(); setStatus(status); });
-   
-     runBtn.addEventListener('click', () => runTask(runBtn, status, async () => {
-       const { PDFDocument } = requireLib('PDFLib', 'pdf-lib');
-       const merged = await PDFDocument.create();
-       const files = queue.files;
-   
-       for (const [i, file] of files.entries()) {
-         setStatus(status, `Elaboro ${i + 1}/${files.length}: ${file.name}…`);
-         let src;
-         try {
-           src = await PDFDocument.load(await file.arrayBuffer());
-         } catch {
-           throw new Error(`"${file.name}" non si può aprire (forse è protetto da password o danneggiato).`);
-         }
-         // copyPages porta le pagine (con font e immagini) dal PDF sorgente a quello nuovo
-         const pages = await merged.copyPages(src, src.getPageIndices());
-         pages.forEach((page) => merged.addPage(page));
-       }
-   
-       const bytes = await merged.save();
-       downloadBlob(new Blob([bytes], { type: 'application/pdf' }), 'pdf-uniti.pdf');
-       setStatus(status, `✔ Fatto! ${merged.getPageCount()} pagine in totale · ${formatBytes(bytes.length)}.`, 'success');
-     }));
-   }
    
    /* =============================================================
       5. TOOL 2 — FIRMA & ANNOTAZIONI PDF
@@ -1723,7 +1721,6 @@
    
    // Con "defer" il DOM è già pronto quando questo script viene eseguito
    checkLibraries();
-   initMerge();
    initSign();
    initImg2Pdf();
    initConvert();

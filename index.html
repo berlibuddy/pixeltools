@@ -134,33 +134,7 @@
       </div>
     </section>
 
-    <!-- ================= TOOL 1: UNISCI PDF ================= -->
-    <section class="workspace" id="tool-merge" data-tool="merge" style="--accent: var(--c-merge)" hidden>
-      <header class="ws-header">
-        <a class="btn btn-small" href="#">← Dashboard</a>
-        <div>
-          <h2 tabindex="-1">Unisci PDF</h2>
-          <p>Aggiungi due o più PDF, mettili in ordine con ▲ ▼ e scarica il file unico.</p>
-        </div>
-      </header>
-
-      <div class="panel">
-        <label class="dropzone">
-          <input type="file" accept="application/pdf,.pdf" multiple class="sr-only">
-          <span class="dz-icon" aria-hidden="true">▲</span>
-          <strong>Trascina qui i PDF</strong>
-          <span>oppure clicca per sceglierli</span>
-        </label>
-
-        <ol class="file-list" data-empty="Nessun PDF aggiunto." aria-label="PDF da unire"></ol>
-
-        <div class="actions">
-          <button class="btn" type="button" data-action="clear">Svuota</button>
-          <button class="btn btn-primary" type="button" data-action="run" disabled>Unisci e scarica</button>
-        </div>
-        <p class="status" role="status" aria-live="polite"></p>
-      </div>
-    </section>
+    <!-- TOOL 1: UNISCI PDF → src/tools/merge/ (caricato quando si apre) -->
 
     <!-- ================= TOOL 2: FIRMA & ANNOTAZIONI ================= -->
     <section class="workspace" id="tool-sign" data-tool="sign" style="--accent: var(--c-sign)" hidden>
