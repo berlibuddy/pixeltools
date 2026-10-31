@@ -240,55 +240,7 @@
 
     <!-- TOOL 3: IMMAGINI IN PDF → src/tools/img2pdf/ (caricato quando si apre) -->
 
-    <!-- ================= TOOL 4: CONVERTI & COMPRIMI ================= -->
-    <section class="workspace" id="tool-convert" data-tool="convert" style="--accent: var(--c-convert)" hidden>
-      <header class="ws-header">
-        <a class="btn btn-small" href="#">← Dashboard</a>
-        <div>
-          <h2 tabindex="-1">Convertitore &amp; Compressore Immagini</h2>
-          <p>Scegli il formato di uscita, la qualità e (se vuoi) una dimensione massima.</p>
-        </div>
-      </header>
-
-      <div class="panel">
-        <label class="dropzone">
-          <input type="file" accept="image/*" multiple class="sr-only">
-          <span class="dz-icon" aria-hidden="true">▲</span>
-          <strong>Trascina qui le immagini</strong>
-          <span>oppure clicca per sceglierle</span>
-        </label>
-
-        <ol class="file-list" data-empty="Nessuna immagine aggiunta." aria-label="Immagini da convertire"></ol>
-
-        <div class="options">
-          <label class="field">Converti in
-            <select id="cv-format">
-              <option value="image/jpeg">JPG</option>
-              <option value="image/png">PNG</option>
-              <option value="image/webp" selected>WebP</option>
-            </select>
-          </label>
-          <label class="field">Qualità: <output id="cv-quality-out">75%</output>
-            <input type="range" id="cv-quality" min="10" max="100" value="75">
-          </label>
-          <label class="field">Lato lungo max (px)
-            <input type="number" id="cv-maxside" min="0" step="10" placeholder="Originale">
-          </label>
-        </div>
-        <p class="hint">PNG è senza perdita: la qualità non si applica. Per ridurre molto il peso usa JPG o WebP.</p>
-
-        <div class="actions">
-          <button class="btn" type="button" data-action="clear">Svuota</button>
-          <button class="btn btn-primary" type="button" data-action="run" disabled>Converti</button>
-        </div>
-        <p class="status" role="status" aria-live="polite"></p>
-
-        <ul class="result-list" aria-label="Risultati"></ul>
-        <div class="actions">
-          <button class="btn btn-dark" type="button" id="cv-zip" hidden>Scarica tutto (.zip)</button>
-        </div>
-      </div>
-    </section>
+    <!-- TOOL 4: CONVERTI & COMPRIMI → src/tools/convert/ (caricato quando si apre) -->
 
     <!-- ================= TOOL 5: CREA ZIP ================= -->
     <section class="workspace" id="tool-zip" data-tool="zip" style="--accent: var(--c-zip)" hidden>
