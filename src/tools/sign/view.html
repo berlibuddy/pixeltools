@@ -1,0 +1,101 @@
+<!-- PixelTools — src/tools/sign/view.html · TOOL 2: FIRMA & ANNOTAZIONI -->
+<section class="workspace" id="tool-sign" data-tool="sign" style="--accent: var(--c-sign)" hidden>
+    <header class="ws-header">
+      <a class="btn btn-small" href="#">← Dashboard</a>
+      <div>
+        <h2 tabindex="-1">Firma &amp; Annotazioni PDF</h2>
+        <p>Carica un PDF, scegli cosa inserire e clicca sulla pagina per posizionarlo.</p>
+      </div>
+    </header>
+  
+    <div class="sign-layout">
+      <!-- Colonna sinistra: controlli -->
+      <aside class="panel sign-sidebar">
+        <h3 class="step-title"><span class="step-num">1</span> Carica il PDF</h3>
+        <label class="dropzone dropzone-compact" id="sign-dropzone">
+          <input type="file" accept="application/pdf,.pdf" class="sr-only">
+          <strong>Trascina o clicca</strong>
+          <span>un solo file PDF</span>
+        </label>
+        <p class="file-pill" id="sign-filename" hidden></p>
+  
+        <h3 class="step-title"><span class="step-num">2</span> Cosa vuoi inserire?</h3>
+        <div class="segmented" role="radiogroup" aria-label="Tipo di elemento">
+          <label><input type="radio" name="sign-mode" value="signature" checked><span>✍ Firma</span></label>
+          <label><input type="radio" name="sign-mode" value="date"><span>📅 Data</span></label>
+          <label><input type="radio" name="sign-mode" value="text"><span>🔤 Testo</span></label>
+        </div>
+  
+        <!-- Pannello: firma -->
+        <div class="mode-panel" data-mode="signature">
+          <div class="sig-pad-wrap">
+            <canvas id="sig-pad" aria-label="Riquadro per disegnare la firma con mouse, dito o penna"></canvas>
+            <span class="sig-hint">Disegna qui la tua firma</span>
+          </div>
+          <div class="row">
+            <label class="field field-grow">Spessore tratto
+              <input type="range" id="sig-thickness" min="1" max="8" value="3">
+            </label>
+            <button class="btn btn-small" id="sig-clear" type="button">Cancella</button>
+          </div>
+          <label class="field">Larghezza sul PDF: <output id="sig-width-out">160 pt</output>
+            <input type="range" id="sig-width" min="60" max="350" value="160">
+          </label>
+        </div>
+  
+        <!-- Pannello: data -->
+        <div class="mode-panel" data-mode="date" hidden>
+          <label class="field">Formato data (oggi)
+            <select id="date-format"></select>
+          </label>
+        </div>
+  
+        <!-- Pannello: testo -->
+        <div class="mode-panel" data-mode="text" hidden>
+          <label class="field">Testo da inserire
+            <input type="text" id="text-value" maxlength="200" placeholder="Es. Letto e approvato">
+          </label>
+        </div>
+  
+        <!-- Comune a data e testo -->
+        <div class="mode-panel" data-mode="date text" hidden>
+          <label class="field">Dimensione testo: <output id="font-size-out">14 pt</output>
+            <input type="range" id="font-size" min="8" max="48" value="14">
+          </label>
+        </div>
+  
+        <label class="field">Colore inchiostro
+          <select id="ink-color">
+            <option value="#000000">Nero</option>
+            <option value="#1f3fbf">Blu</option>
+            <option value="#c0141c">Rosso</option>
+          </select>
+        </label>
+  
+        <h3 class="step-title"><span class="step-num">3</span> Clicca sul PDF</h3>
+        <p class="hint">Trascina gli elementi per spostarli. Selezionane uno per cambiarne dimensione o colore; ✕ o tasto Canc per eliminarlo.</p>
+  
+        <div class="actions">
+          <button class="btn" type="button" id="sign-reset" disabled>Rimuovi tutto</button>
+          <button class="btn btn-primary" type="button" id="sign-export" disabled>Scarica PDF</button>
+        </div>
+        <p class="status" role="status" aria-live="polite"></p>
+      </aside>
+  
+      <!-- Colonna destra: anteprima pagina -->
+      <div class="panel sign-preview">
+        <div class="pager">
+          <button class="btn btn-small" type="button" id="page-prev" aria-label="Pagina precedente" disabled>◀</button>
+          <span id="page-info">—</span>
+          <button class="btn btn-small" type="button" id="page-next" aria-label="Pagina successiva" disabled>▶</button>
+        </div>
+        <div class="stage">
+          <p class="stage-empty">Carica un PDF per vedere qui l'anteprima.</p>
+          <div class="page-wrap" hidden>
+            <canvas id="pdf-canvas"></canvas>
+            <div class="overlay-layer" id="overlay-layer" aria-label="Pagina: clicca per posizionare l'elemento"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
