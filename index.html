@@ -238,62 +238,7 @@
       </div>
     </section>
 
-    <!-- ================= TOOL 3: IMMAGINI IN PDF ================= -->
-    <section class="workspace" id="tool-img2pdf" data-tool="img2pdf" style="--accent: var(--c-img2pdf)" hidden>
-      <header class="ws-header">
-        <a class="btn btn-small" href="#">← Dashboard</a>
-        <div>
-          <h2 tabindex="-1">Immagini in PDF</h2>
-          <p>Ogni immagine diventa una pagina. Riordinale con ▲ ▼.</p>
-        </div>
-      </header>
-
-      <div class="panel">
-        <label class="dropzone">
-          <input type="file" accept="image/*" multiple class="sr-only">
-          <span class="dz-icon" aria-hidden="true">▲</span>
-          <strong>Trascina qui le immagini</strong>
-          <span>JPG, PNG, WebP… oppure clicca</span>
-        </label>
-
-        <ol class="file-list" data-empty="Nessuna immagine aggiunta." aria-label="Immagini da convertire"></ol>
-
-        <div class="options">
-          <label class="field">Formato pagina
-            <select id="i2p-size">
-              <option value="a4">A4</option>
-              <option value="fit">Adatta all'immagine</option>
-            </select>
-          </label>
-          <label class="field">Orientamento (A4)
-            <select id="i2p-orient">
-              <option value="auto">Automatico</option>
-              <option value="portrait">Verticale</option>
-              <option value="landscape">Orizzontale</option>
-            </select>
-          </label>
-          <label class="field">Margine
-            <select id="i2p-margin">
-              <option value="0">Nessuno</option>
-              <option value="20">Piccolo</option>
-              <option value="40" selected>Normale</option>
-            </select>
-          </label>
-          <div class="field">
-            <label class="checkbox"><input type="checkbox" id="i2p-recompress" checked> Ricomprimi (PDF più leggero, corregge la rotazione delle foto da smartphone)</label>
-            <label class="field">Qualità: <output id="i2p-quality-out">85%</output>
-              <input type="range" id="i2p-quality" min="30" max="100" value="85">
-            </label>
-          </div>
-        </div>
-
-        <div class="actions">
-          <button class="btn" type="button" data-action="clear">Svuota</button>
-          <button class="btn btn-primary" type="button" data-action="run" disabled>Crea PDF</button>
-        </div>
-        <p class="status" role="status" aria-live="polite"></p>
-      </div>
-    </section>
+    <!-- TOOL 3: IMMAGINI IN PDF → src/tools/img2pdf/ (caricato quando si apre) -->
 
     <!-- ================= TOOL 4: CONVERTI & COMPRIMI ================= -->
     <section class="workspace" id="tool-convert" data-tool="convert" style="--accent: var(--c-convert)" hidden>
