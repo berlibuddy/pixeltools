@@ -1,0 +1,46 @@
+<!-- PixelTools — src/tools/zip/view.html · TOOL 5: CREA ZIP -->
+<section class="workspace" id="tool-zip" data-tool="zip" style="--accent: var(--c-zip)" hidden>
+  <header class="ws-header">
+    <a class="btn btn-small" href="#">← Dashboard</a>
+    <div>
+      <h2 tabindex="-1">Crea Archivio ZIP</h2>
+      <p>Aggiungi file o intere cartelle: la struttura delle cartelle viene mantenuta.</p>
+    </div>
+  </header>
+
+  <div class="panel">
+    <label class="dropzone">
+      <input type="file" multiple class="sr-only">
+      <span class="dz-icon" aria-hidden="true">▲</span>
+      <strong>Trascina qui file o cartelle</strong>
+      <span>oppure clicca per scegliere i file</span>
+    </label>
+    <div class="actions actions-left">
+      <label class="btn btn-small">
+        📁 Aggiungi cartella
+        <input type="file" id="zip-folder" webkitdirectory multiple class="sr-only">
+      </label>
+      <span class="hint" id="zip-summary"></span>
+    </div>
+
+    <ol class="file-list" data-empty="Nessun file aggiunto." aria-label="File da archiviare"></ol>
+
+    <div class="options">
+      <label class="field">Nome archivio
+        <input type="text" id="zip-name" value="archivio" maxlength="80">
+      </label>
+      <label class="field">Compressione: <output id="zip-level-out">6</output>
+        <input type="range" id="zip-level" min="0" max="9" value="6">
+      </label>
+    </div>
+    <p class="hint">0 = solo archivia (velocissimo) · 9 = massima compressione. Foto, video e PDF di solito non si riducono molto: sono già compressi.</p>
+
+    <div class="progress" hidden><div class="progress-bar"></div></div>
+
+    <div class="actions">
+      <button class="btn" type="button" data-action="clear">Svuota</button>
+      <button class="btn btn-primary" type="button" data-action="run" disabled>Crea ZIP</button>
+    </div>
+    <p class="status" role="status" aria-live="polite"></p>
+  </div>
+</section>
