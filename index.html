@@ -21,7 +21,7 @@
   <!-- pdf.js: SOLO per mostrare l'anteprima delle pagine nel tool Firma → pdfjsLib -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
   <!-- La nostra app (sempre per ultima) -->
-  <script type="module" src="app.js"></script>
+  <script type="module" src="src/main.js"></script>
 </head>
 <body>
 
@@ -134,19 +134,7 @@
       </div>
     </section>
 
-    <!-- TOOL 1: UNISCI PDF → src/tools/merge/ (caricato quando si apre) -->
-
-    <!-- TOOL 2: FIRMA & ANNOTAZIONI → src/tools/sign/ (caricato quando si apre) -->
-
-    <!-- TOOL 3: IMMAGINI IN PDF → src/tools/img2pdf/ (caricato quando si apre) -->
-
-    <!-- TOOL 4: CONVERTI & COMPRIMI → src/tools/convert/ (caricato quando si apre) -->
-
-    <!-- TOOL 5: CREA ZIP → src/tools/zip/ (caricato quando si apre) -->
-
-    <!-- TOOL 6: FOTO IN UNCINETTO → src/tools/crochet/ (caricato quando si apre) -->
-
-    <!-- TOOL 7: FOTO IN PIXEL ART → src/tools/pixel/ (caricato quando si apre) -->
+    <!-- Le aree di lavoro dei tool (src/tools/<tool>/view.html) vengono aggiunte qui quando apri un tool -->
   </main>
 
   <footer class="site-footer">
