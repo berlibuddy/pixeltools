@@ -2,7 +2,7 @@
    PixelTools — src/core/ui.js
    Pezzi d'interfaccia riutilizzabili (condivisi da tutti i tool)
    - setStatus:     scrive un messaggio nella riga di stato
-   - requireLib:    recupera una libreria globale (pdf-lib, JSZip, pdf.js)
+   - requireLib:    recupera una libreria globale della CDN (pdf-lib, pdf.js)
    - runTask:       esegue un'operazione lunga bloccando il bottone
    - setupDropzone: collega una zona "trascina qui i file"
    - FileQueue:     lista di file con anteprima, riordino e rimozione

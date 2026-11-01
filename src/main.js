@@ -11,8 +11,9 @@
 
    Librerie caricate via CDN in index.html (variabili globali):
      - PDFLib    (pdf-lib 1.17.1)   → creare e modificare PDF
-     - JSZip     (3.10.1)           → creare archivi .zip
      - pdfjsLib  (pdf.js 3.11.174)  → SOLO anteprima pagine nel tool Firma
+   Librerie da npm (importate solo dai tool che le usano):
+     - jszip     (3.10.1)           → creare archivi .zip (Crea ZIP, Converti)
    Le immagini usano la Canvas API nativa del browser.
 
    L'elenco dei tool (nomi, icone, colori…) è in src/tools/registry.js.
@@ -109,7 +110,7 @@
       3. AVVIO
       ============================================================= */
    function checkLibraries() {
-     const libs = [['PDFLib', 'pdf-lib'], ['JSZip', 'JSZip'], ['pdfjsLib', 'pdf.js']];
+     const libs = [['PDFLib', 'pdf-lib'], ['pdfjsLib', 'pdf.js']];
      const missing = libs
        .filter(([g]) => !(window[g] || (g === 'pdfjsLib' && window['pdfjs-dist/build/pdf'])))
        .map(([, label]) => label);

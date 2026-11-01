@@ -8,7 +8,8 @@
    import { $, h } from '../../core/dom.js';
    import { formatBytes, baseName, isImage, downloadBlob, uniqueName } from '../../core/files.js';
    import { fileToCanvas, canvasToBlob, canEncode } from '../../core/images.js';
-   import { setStatus, requireLib, runTask, setupDropzone, FileQueue } from '../../core/ui.js';
+   import { setStatus, runTask, setupDropzone, FileQueue } from '../../core/ui.js';
+   import JSZip from 'jszip'; // libreria da npm (prima arrivava dalla CDN)
    import view from './view.html?raw';
    
    export { view };
@@ -111,8 +112,7 @@
      }));
    
      zipBtn.addEventListener('click', () => runTask(zipBtn, status, async () => {
-       const JSZipLib = requireLib('JSZip', 'JSZip');
-       const zip = new JSZipLib();
+       const zip = new JSZip();
        results.forEach((r) => zip.file(r.name, r.blob));
        // Le immagini sono già compresse: STORE (senza ricompressione) è più veloce
        const blob = await zip.generateAsync({ type: 'blob', compression: 'STORE' });

@@ -7,7 +7,8 @@
    ============================================================= */
    import { $ } from '../../core/dom.js';
    import { formatBytes, downloadBlob, uniqueName, pathOf } from '../../core/files.js';
-   import { setStatus, requireLib, runTask, setupDropzone, FileQueue } from '../../core/ui.js';
+   import { setStatus, runTask, setupDropzone, FileQueue } from '../../core/ui.js';
+   import JSZip from 'jszip'; // libreria da npm (prima arrivava dalla CDN)
    import view from './view.html?raw';
    
    export { view };
@@ -51,8 +52,7 @@
      });
    
      runBtn.addEventListener('click', () => runTask(runBtn, status, async () => {
-       const JSZipLib = requireLib('JSZip', 'JSZip');
-       const zip = new JSZipLib();
+       const zip = new JSZip();
        const used = new Set();
    
        for (const file of queue.files) {
