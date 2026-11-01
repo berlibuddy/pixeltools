@@ -15,49 +15,56 @@
      - pdfjsLib  (pdf.js 3.11.174)  → SOLO anteprima pagine nel tool Firma
    Le immagini usano la Canvas API nativa del browser.
 
+   L'elenco dei tool (nomi, icone, colori…) è in src/tools/registry.js.
+
    Indice:
-     1. Router (dashboard ↔ strumenti)
-     2. Avvio
+     1. Dashboard (le card, create dal registro)
+     2. Router (dashboard ↔ strumenti)
+     3. Avvio
    ============================================================= */
    'use strict';
 
-   import { $, $$ } from './core/dom.js';
+   import { $, $$, h } from './core/dom.js';
+   import { TOOLS } from './tools/registry.js';
 
    /* =============================================================
-      1. ROUTER — mostra la dashboard o lo strumento indicato nell'URL (#merge, #sign…)
+      1. DASHBOARD — una card per ogni tool del registro
+      ============================================================= */
+   function renderDashboard() {
+     const cards = TOOLS.map((tool) => {
+       const card = h('a', { class: 'tool-card', href: `#${tool.id}`, style: `--accent: ${tool.accent}` });
+       // l'icona è markup statico nostro (registry.js): sicuro
+       const tpl = document.createElement('template');
+       tpl.innerHTML = `<svg class="px-icon" viewBox="0 0 16 16" aria-hidden="true" shape-rendering="crispEdges">${tool.icon}</svg>`;
+       card.append(
+         tpl.content.firstElementChild,
+         h('h2', {}, tool.name),
+         h('p', {}, tool.desc),
+         h('span', { class: 'cta' }, 'Apri →'),
+       );
+       return card;
+     });
+     $('#dashboard .tool-grid').append(...cards);
+   }
+
+   /* =============================================================
+      2. ROUTER — mostra la dashboard o lo strumento indicato nell'URL (#merge, #sign…)
       Usare l'hash fa funzionare anche il tasto "indietro" del browser.
       ============================================================= */
-   const TOOL_TITLES = {
-     merge: 'Unisci PDF',
-     sign: 'Firma & Annotazioni',
-     img2pdf: 'Immagini in PDF',
-     convert: 'Converti & Comprimi',
-     zip: 'Crea ZIP',
-     crochet: 'Foto in Uncinetto',
-     pixel: 'Foto in Pixel Art',
-   };
+   const TOOL_BY_ID = Object.fromEntries(TOOLS.map((tool) => [tool.id, tool])); // 'merge' → { id, name, … }
    const toolHooks = {}; // funzioni da chiamare quando un tool diventa visibile
    
    /**
-    * Tool "a richiesta" (Passo 3): ognuno vive in src/tools/<tool>/ e viene
-    * scaricato solo la prima volta che lo apri. tool.js esporta:
+    * Tool "a richiesta": ognuno vive in src/tools/<tool>/ e viene
+    * scaricato solo la prima volta che lo apri (tool.load() del registro). tool.js esporta:
     *   view → il markup (view.html) · init(ws, toolHooks) → collega i comandi
     * Se il tool ha uno stile suo (style.css), Vite lo carica insieme al tool.
     */
-   const LAZY_TOOLS = {
-     merge: () => import('./tools/merge/tool.js'),
-     img2pdf: () => import('./tools/img2pdf/tool.js'),
-     convert: () => import('./tools/convert/tool.js'),
-     zip: () => import('./tools/zip/tool.js'),
-     sign: () => import('./tools/sign/tool.js'),
-     crochet: () => import('./tools/crochet/tool.js'),
-     pixel: () => import('./tools/pixel/tool.js'),
-   };
    const loadingTools = {}; // id → Promise: ogni tool si carica una volta sola
    
    function loadTool(id) {
-     if (!LAZY_TOOLS[id]) return Promise.resolve();
-     loadingTools[id] ??= LAZY_TOOLS[id]().then(({ view, init }) => {
+     if (!Object.hasOwn(TOOL_BY_ID, id)) return Promise.resolve();
+     loadingTools[id] ??= TOOL_BY_ID[id].load().then(({ view, init }) => {
        const tpl = document.createElement('template');
        tpl.innerHTML = view; // markup statico nostro (view.html): sicuro
        const ws = tpl.content.querySelector('.workspace');
@@ -72,7 +79,7 @@
    
    async function route() {
      const id = location.hash.slice(1);
-     let active = id in TOOL_TITLES ? id : null;
+     let active = Object.hasOwn(TOOL_BY_ID, id) ? id : null; // hasOwn: #constructor & co. non sono tool
    
      if (active) {
        try {
@@ -89,7 +96,7 @@
    
      $('#dashboard').hidden = Boolean(active);
      $$('.workspace').forEach((ws) => { ws.hidden = ws.dataset.tool !== active; });
-     document.title = active ? `${TOOL_TITLES[active]} — PixelTools` : 'PixelTools — PDF, Immagini e ZIP nel browser';
+     document.title = active ? `${TOOL_BY_ID[active].title} — PixelTools` : 'PixelTools — PDF, Immagini e ZIP nel browser';
      window.scrollTo(0, 0);
    
      if (active) {
@@ -99,7 +106,7 @@
    }
    
    /* =============================================================
-      2. AVVIO
+      3. AVVIO
       ============================================================= */
    function checkLibraries() {
      const libs = [['PDFLib', 'pdf-lib'], ['JSZip', 'JSZip'], ['pdfjsLib', 'pdf.js']];
@@ -119,5 +126,6 @@
    
    // Con "defer" il DOM è già pronto quando questo script viene eseguito
    checkLibraries();
+   renderDashboard();
    window.addEventListener('hashchange', route);
    route();
