@@ -8,6 +8,15 @@
    - VT323 (pixel) solo per logo e titoli · Space Grotesk per i testi
    ============================================================= */
 
+/* ---------- 0. Font ospitati nel sito (da npm, licenza OFL 1.1) ----------
+   Prima arrivavano dai server di Google, che così ricevevano l'IP di ogni
+   visitatore (GDPR). Ora Vite copia i file dei font dentro il sito. */
+@import '@fontsource/vt323/400.css';
+@import '@fontsource/space-grotesk/400.css';
+@import '@fontsource/space-grotesk/500.css';
+@import '@fontsource/space-grotesk/600.css';
+@import '@fontsource/space-grotesk/700.css';
+
 /* ---------- 1. Variabili (design tokens) ---------- */
 :root {
   /* Superfici */

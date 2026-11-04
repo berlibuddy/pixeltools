@@ -45,7 +45,7 @@
    
      const pad = $('#sig-pad');
      const padWrap = pad.parentElement;
-     const padCtx = pad.getContext('2d');
+     const padCtx = pad.getContext('2d', { willReadFrequently: true }); // leggiamo spesso i pixel (ritaglio della firma)
      const thickness = $('#sig-thickness');
      const sigWidth = $('#sig-width');
      const sigWidthOut = $('#sig-width-out');
