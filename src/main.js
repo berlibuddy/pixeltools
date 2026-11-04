@@ -10,10 +10,11 @@
    I pezzi comuni sono in src/core/, lo stile comune in src/styles/.
 
    Librerie caricate via CDN in index.html (variabili globali):
-     - PDFLib    (pdf-lib 1.17.1)   → creare e modificare PDF
      - pdfjsLib  (pdf.js 3.11.174)  → SOLO anteprima pagine nel tool Firma
    Librerie da npm (importate solo dai tool che le usano):
      - jszip     (3.10.1)           → creare archivi .zip (Crea ZIP, Converti)
+     - pdf-lib   (1.17.1)           → creare e modificare PDF (Unisci, Immagini
+                                      in PDF, Firma, export PDF dell'Uncinetto)
    Le immagini usano la Canvas API nativa del browser.
 
    L'elenco dei tool (nomi, icone, colori…) è in src/tools/registry.js.
@@ -110,7 +111,7 @@
       3. AVVIO
       ============================================================= */
    function checkLibraries() {
-     const libs = [['PDFLib', 'pdf-lib'], ['pdfjsLib', 'pdf.js']];
+     const libs = [['pdfjsLib', 'pdf.js']];
      const missing = libs
        .filter(([g]) => !(window[g] || (g === 'pdfjsLib' && window['pdfjs-dist/build/pdf'])))
        .map(([, label]) => label);

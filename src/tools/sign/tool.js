@@ -8,6 +8,7 @@
    import { $, $$, h, clamp } from '../../core/dom.js';
    import { baseName, isPdf, downloadBlob } from '../../core/files.js';
    import { setStatus, requireLib, runTask, setupDropzone } from '../../core/ui.js';
+   import { PDFDocument, StandardFonts, degrees, rgb } from 'pdf-lib'; // libreria da npm (prima arrivava dalla CDN)
    import { CONFIG } from '../../core/config.js';
    import './style.css';
    import view from './view.html?raw';
@@ -450,11 +451,10 @@
      /* ---------- 5f. Esportazione con pdf-lib ---------- */
      function hexToRgb(hex) {
        const n = parseInt(hex.slice(1), 16);
-       return PDFLib.rgb(((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255);
+       return rgb(((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255);
      }
    
      exportBtn.addEventListener('click', () => runTask(exportBtn, status, async () => {
-       const { PDFDocument, StandardFonts, degrees } = requireLib('PDFLib', 'pdf-lib');
    
        let doc;
        try {

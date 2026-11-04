@@ -9,7 +9,8 @@
    import { $, $$, h, clamp } from '../../core/dom.js';
    import { formatBytes, baseName, isImage, downloadBlob } from '../../core/files.js';
    import { fileToCanvas, canvasToBlob } from '../../core/images.js';
-   import { setStatus, requireLib, runTask, setupDropzone } from '../../core/ui.js';
+   import { setStatus, runTask, setupDropzone } from '../../core/ui.js';
+   import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'; // libreria da npm (prima arrivava dalla CDN)
    import { CONFIG } from '../../core/config.js';
    import './style.css';
    import view from './view.html?raw';
@@ -313,7 +314,6 @@
      }));
    
      pdfBtn.addEventListener('click', () => runTask(pdfBtn, status, async () => {
-       const { PDFDocument, StandardFonts, rgb } = requireLib('PDFLib', 'pdf-lib');
        const P = S.pattern;
        const pdf = await PDFDocument.create();
        const font = await pdf.embedFont(StandardFonts.Helvetica);

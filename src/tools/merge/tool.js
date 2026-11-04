@@ -8,7 +8,8 @@
    ============================================================= */
    import { $ } from '../../core/dom.js';
    import { formatBytes, isPdf, downloadBlob } from '../../core/files.js';
-   import { setStatus, requireLib, runTask, setupDropzone, FileQueue } from '../../core/ui.js';
+   import { setStatus, runTask, setupDropzone, FileQueue } from '../../core/ui.js';
+   import { PDFDocument } from 'pdf-lib'; // libreria da npm (prima arrivava dalla CDN)
    import view from './view.html?raw';
    
    export { view };
@@ -31,7 +32,6 @@
      $('[data-action="clear"]', ws).addEventListener('click', () => { queue.clear(); setStatus(status); });
    
      runBtn.addEventListener('click', () => runTask(runBtn, status, async () => {
-       const { PDFDocument } = requireLib('PDFLib', 'pdf-lib');
        const merged = await PDFDocument.create();
        const files = queue.files;
    

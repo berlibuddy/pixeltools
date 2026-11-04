@@ -8,7 +8,8 @@
    import { $ } from '../../core/dom.js';
    import { formatBytes, isImage, downloadBlob } from '../../core/files.js';
    import { fileToCanvas, canvasToBlob } from '../../core/images.js';
-   import { setStatus, requireLib, runTask, setupDropzone, FileQueue } from '../../core/ui.js';
+   import { setStatus, runTask, setupDropzone, FileQueue } from '../../core/ui.js';
+   import { PDFDocument } from 'pdf-lib'; // libreria da npm (prima arrivava dalla CDN)
    import { CONFIG } from '../../core/config.js';
    import view from './view.html?raw';
    
@@ -74,7 +75,6 @@
      }
    
      runBtn.addEventListener('click', () => runTask(runBtn, status, async () => {
-       const { PDFDocument } = requireLib('PDFLib', 'pdf-lib');
        const pdf = await PDFDocument.create();
        const opt = {
          size: $('#i2p-size').value,
