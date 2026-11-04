@@ -7,9 +7,12 @@
    ============================================================= */
    import { $, $$, h, clamp } from '../../core/dom.js';
    import { baseName, isPdf, downloadBlob } from '../../core/files.js';
-   import { setStatus, requireLib, runTask, setupDropzone } from '../../core/ui.js';
+   import { setStatus, runTask, setupDropzone } from '../../core/ui.js';
    import { PDFDocument, StandardFonts, degrees, rgb } from 'pdf-lib'; // libreria da npm (prima arrivava dalla CDN)
-   import { CONFIG } from '../../core/config.js';
+   // pdf.js da npm: build "legacy" = la più compatibile con i browser (Safari compreso)
+   import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.min.mjs';
+   // Il "worker" di pdf.js è un file a parte: con ?url Vite lo copia nel sito e ci dà il suo indirizzo
+   import pdfjsWorker from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
    import './style.css';
    import view from './view.html?raw';
    
@@ -207,8 +210,7 @@
      });
    
      async function loadPdf(file) {
-       const pdfjs = requireLib('pdfjsLib', 'pdf.js');
-       pdfjs.GlobalWorkerOptions.workerSrc = CONFIG.pdfjsWorker;
+       pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
        setStatus(status, 'Apro il PDF…');
    
        const bytes = new Uint8Array(await file.arrayBuffer());
@@ -251,7 +253,7 @@
        pdfCanvas.height = Math.floor(viewport.height);
        renderOverlays();
    
-       const task = page.render({ canvasContext: pdfCanvas.getContext('2d'), viewport });
+       const task = page.render({ canvas: pdfCanvas, viewport });
        S.renderTask = task;
        try {
          await task.promise;

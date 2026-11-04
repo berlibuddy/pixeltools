@@ -2,7 +2,6 @@
    PixelTools — src/core/ui.js
    Pezzi d'interfaccia riutilizzabili (condivisi da tutti i tool)
    - setStatus:     scrive un messaggio nella riga di stato
-   - requireLib:    recupera una libreria globale della CDN (oggi solo pdf.js)
    - runTask:       esegue un'operazione lunga bloccando il bottone
    - setupDropzone: collega una zona "trascina qui i file"
    - FileQueue:     lista di file con anteprima, riordino e rimozione
@@ -14,13 +13,6 @@
    export function setStatus(el, message = '', type = 'info') {
      el.textContent = message;
      el.dataset.type = type;
-   }
-   
-   /** Recupera una libreria globale o lancia un errore chiaro */
-   export function requireLib(globalName, label) {
-     const lib = window[globalName] || (globalName === 'pdfjsLib' ? window['pdfjs-dist/build/pdf'] : null);
-     if (!lib) throw new Error(`La libreria ${label} non è stata caricata. Controlla la connessione internet e ricarica la pagina.`);
-     return lib;
    }
    
    /**

@@ -13,10 +13,7 @@
 
   <link rel="stylesheet" href="src/styles/style.css">
 
-  <!-- Librerie via CDN (le altre arrivano da npm, dentro i tool) -->
-  <!-- pdf.js: SOLO per mostrare l'anteprima delle pagine nel tool Firma → pdfjsLib -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
-  <!-- La nostra app (sempre per ultima) -->
+  <!-- La nostra app (le librerie arrivano da npm, dentro i tool che le usano) -->
   <script type="module" src="src/main.js"></script>
 </head>
 <body>
@@ -33,7 +30,7 @@
 
   <main class="container">
 
-    <!-- Avviso se le librerie CDN non si caricano (es. offline) -->
+    <!-- Avviso se uno strumento non si carica (es. offline) -->
     <div id="lib-warning" class="lib-warning" role="alert" hidden></div>
 
     <!-- ================= DASHBOARD ================= -->

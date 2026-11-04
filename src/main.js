@@ -9,12 +9,11 @@
    a volte style.css) e viene scaricato solo quando lo apri.
    I pezzi comuni sono in src/core/, lo stile comune in src/styles/.
 
-   Librerie caricate via CDN in index.html (variabili globali):
-     - pdfjsLib  (pdf.js 3.11.174)  → SOLO anteprima pagine nel tool Firma
    Librerie da npm (importate solo dai tool che le usano):
-     - jszip     (3.10.1)           → creare archivi .zip (Crea ZIP, Converti)
-     - pdf-lib   (1.17.1)           → creare e modificare PDF (Unisci, Immagini
+     - jszip      (3.10.1)          → creare archivi .zip (Crea ZIP, Converti)
+     - pdf-lib    (1.17.1)          → creare e modificare PDF (Unisci, Immagini
                                       in PDF, Firma, export PDF dell'Uncinetto)
+     - pdfjs-dist (6.5.438, legacy) → SOLO anteprima pagine nel tool Firma
    Le immagini usano la Canvas API nativa del browser.
 
    L'elenco dei tool (nomi, icone, colori…) è in src/tools/registry.js.
@@ -110,24 +109,11 @@
    /* =============================================================
       3. AVVIO
       ============================================================= */
-   function checkLibraries() {
-     const libs = [['pdfjsLib', 'pdf.js']];
-     const missing = libs
-       .filter(([g]) => !(window[g] || (g === 'pdfjsLib' && window['pdfjs-dist/build/pdf'])))
-       .map(([, label]) => label);
-     if (missing.length) {
-       const banner = $('#lib-warning');
-       banner.textContent = `⚠ Non riesco a caricare: ${missing.join(', ')}. Le librerie arrivano da internet (CDN): controlla la connessione e ricarica.`;
-       banner.hidden = false;
-     }
-   }
-   
    // Se un file viene lasciato fuori da una dropzone, il browser NON deve aprirlo
    window.addEventListener('dragover', (e) => e.preventDefault());
    window.addEventListener('drop', (e) => e.preventDefault());
    
    // Con "defer" il DOM è già pronto quando questo script viene eseguito
-   checkLibraries();
    renderDashboard();
    window.addEventListener('hashchange', route);
    route();
