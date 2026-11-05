@@ -337,7 +337,9 @@
          .sort((a, b) => b.n - a.n)
          .map(({ c, n }) => {
            const hex = toHex(...c);
-           return h('li', { class: 'px-swatch', title: `${hex} · ${n} pixel` }, h('span', { style: `background:${hex}` }), hex);
+           const swatch = h('span');
+           swatch.style.background = hex; // così (e non con style="…") la CSP lo permette
+           return h('li', { class: 'px-swatch', title: `${hex} · ${n} pixel` }, swatch, hex);
          }));
      }
    

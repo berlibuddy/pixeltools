@@ -33,7 +33,8 @@
       ============================================================= */
    function renderDashboard() {
      const cards = TOOLS.filter((tool) => !tool.hidden).map((tool) => {
-       const card = h('a', { class: 'tool-card', href: `#${tool.id}`, style: `--accent: ${tool.accent}` });
+       const card = h('a', { class: 'tool-card', href: `#${tool.id}` });
+       card.style.setProperty('--accent', tool.accent); // così (e non con style="…") la CSP lo permette
        // l'icona è markup statico nostro (registry.js): sicuro
        const tpl = document.createElement('template');
        tpl.innerHTML = `<svg class="px-icon" viewBox="0 0 16 16" aria-hidden="true" shape-rendering="crispEdges">${tool.icon}</svg>`;

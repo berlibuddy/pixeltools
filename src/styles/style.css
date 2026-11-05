@@ -68,6 +68,18 @@
   --shadow-sm: 2px 2px 0 #111111;
 }
 
+/* Colore di ogni tool (la striscia in alto nell'area di lavoro).
+   Sta qui e non in uno style="…" nel view.html: la CSP (vite.config.js)
+   blocca gli stili scritti dentro i tag. */
+.workspace[data-tool="merge"]    { --accent: var(--c-merge); }
+.workspace[data-tool="sign"]     { --accent: var(--c-sign); }
+.workspace[data-tool="img2pdf"]  { --accent: var(--c-img2pdf); }
+.workspace[data-tool="convert"]  { --accent: var(--c-convert); }
+.workspace[data-tool="zip"]      { --accent: var(--c-zip); }
+.workspace[data-tool="crochet"]  { --accent: var(--c-crochet); }
+.workspace[data-tool="pixel"]    { --accent: var(--c-pixel); }
+.workspace[data-tool="credits"]  { --accent: var(--ink); }
+
 /* ---------- 2. Base ---------- */
 *, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }

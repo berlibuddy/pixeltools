@@ -224,9 +224,16 @@
        canvas.style.height = `${canvas.height / dpr}px`;
      }
    
+     // Quadratino colorato: colore impostato così (e non con style="…") perché la CSP lo permetta
+     function swatchOf(hex) {
+       const el = h('span', { class: 'legend-swatch', 'aria-hidden': 'true' });
+       el.style.background = hex;
+       return el;
+     }
+
      function renderLegend(P) {
        legendEl.replaceChildren(...P.palette.map((c) => h('li', { class: 'legend-item' },
-         h('span', { class: 'legend-swatch', style: `background:${c.hex}`, 'aria-hidden': 'true' }),
+         swatchOf(c.hex),
          h('span', { class: 'legend-letter' }, c.letter),
          h('span', { class: 'legend-name' }, c.name, h('small', {}, c.hex)),
          h('span', { class: 'legend-count' }, `${c.count} punti`))));
