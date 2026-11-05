@@ -121,6 +121,67 @@ if (cj) {
   console.warn('⚠ core-js non trovato dentro pdf.js: controlla se serve ancora la sua voce.');
 }
 
+// File extra di pdf.js che vite.config.js copia nel sito (passo 5e): licenze lette dai file del pacchetto
+const PDFJS = path.join(ROOT, 'node_modules/pdfjs-dist');
+const PDFJS_VERSION = JSON.parse(fs.readFileSync(path.join(PDFJS, 'package.json'), 'utf8')).version;
+const PDFJS_EXTRAS = [
+  {
+    name: 'Decodificatore JBIG2 (PDFium)', license: 'BSD-3-Clause + Apache-2.0',
+    files: ['wasm/LICENSE_JBIG2', 'wasm/LICENSE_PDFJS_JBIG2'],
+    url: 'https://pdfium.googlesource.com/pdfium/',
+    note: 'Legge le immagini JBIG2 dei PDF scansionati (anteprima della Firma). Versione JavaScript preparata da Mozilla per pdf.js.',
+  },
+  {
+    name: 'OpenJPEG', license: 'BSD-2-Clause',
+    files: ['wasm/LICENSE_OPENJPEG', 'wasm/LICENSE_PDFJS_OPENJPEG'],
+    url: 'https://github.com/uclouvain/openjpeg',
+    note: 'Legge le immagini JPEG 2000 dei PDF (anteprima della Firma). Versione JavaScript preparata da Mozilla per pdf.js.',
+  },
+  {
+    name: 'Font standard Foxit (PDFium)', license: 'BSD-3-Clause',
+    files: ['standard_fonts/LICENSE_FOXIT'],
+    url: 'https://pdfium.googlesource.com/pdfium/',
+    note: 'Times, Courier, Symbol, ZapfDingbats… per i PDF che non includono questi font.',
+  },
+  {
+    name: 'Liberation Sans', version: '1.07.4', license: 'GPL-2.0 con eccezione per i font',
+    files: ['standard_fonts/LICENSE_LIBERATION'],
+    url: `https://unpkg.com/pdfjs-dist@${PDFJS_VERSION}/standard_fonts/`,
+    note: 'Sostituisce Helvetica/Arial nei PDF che non includono il font. Licenza GPL v2 con eccezione per i font '
+      + '(usarli per mostrare un documento non rende GPL il documento). Distribuiti senza modifiche: '
+      + 'i file originali sono al link "Sito del progetto"; progetto: https://github.com/liberationfonts/liberation-fonts',
+  },
+  {
+    name: 'Adobe CMap', license: 'BSD-3-Clause',
+    files: ['cmaps/LICENSE'],
+    url: 'https://github.com/adobe-type-tools/cmap-resources',
+    note: 'Tabelle per mostrare il testo cinese, giapponese e coreano.',
+  },
+];
+// Controllo: se un aggiornamento di pdf.js cambia questi file, lo script lo dice (crediti da rivedere)
+const liberation = path.join(PDFJS, 'standard_fonts/LiberationSans-Regular.ttf');
+if (!fs.existsSync(liberation) || !fs.readFileSync(liberation).includes('Version 1.07.4')) {
+  console.warn('⚠ pdf.js: Liberation Sans 1.07.4 non trovato. I font standard sono cambiati: rivedi PDFJS_EXTRAS.');
+}
+for (const extra of PDFJS_EXTRAS) {
+  if (!extra.files.every((f) => fs.existsSync(path.join(PDFJS, f)))) {
+    console.warn(`⚠ pdf.js: mancano le licenze di "${extra.name}": rivedi PDFJS_EXTRAS.`);
+    continue;
+  }
+  const text = extra.files
+    .map((f) => fs.readFileSync(path.join(PDFJS, f), 'utf8').replace(/^%%Copyright: ?/gm, '').trim())
+    .join('\n\n────────────────────────────────────────\n\n');
+  items.push({
+    name: extra.name,
+    version: extra.version ?? `pdfjs-dist ${PDFJS_VERSION}`,
+    license: extra.license,
+    copyright: copyrightLine(text),
+    url: extra.url,
+    note: `${extra.note} (file inclusi in pdfjs-dist ${PDFJS_VERSION})`,
+    text,
+  });
+}
+
 // Prima le librerie "principali" (quelle che usiamo direttamente), poi i font, poi gli aiutanti
 const deps = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).dependencies;
 const rank = (it) => (it.name.startsWith('@fontsource/') ? 1 : it.name in deps ? 0 : 2);

@@ -15,7 +15,7 @@
 
    export function init(ws) {
      const card = (it) => h('article', { class: 'credit' },
-       h('h4', {}, it.name, ' ', h('span', { class: 'credit-version' }, `v${it.version}`)),
+       h('h4', {}, it.name, ' ', h('span', { class: 'credit-version' }, /^\d/.test(it.version) ? `v${it.version}` : it.version)),
        h('p', { class: 'credit-meta' },
          h('span', { class: 'tag' }, it.license),
          it.copyright && h('span', {}, it.copyright),

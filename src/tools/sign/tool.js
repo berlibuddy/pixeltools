@@ -13,6 +13,9 @@
    import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.min.mjs';
    // Il "worker" di pdf.js è un file a parte: con ?url Vite lo copia nel sito e ci dà il suo indirizzo
    import pdfjsWorker from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
+   // File extra di pdf.js (decodificatori per i PDF scansionati, font standard, CMap):
+   // li copia nel sito vite.config.js, in una cartella col numero di versione
+   const PDFJS_ASSETS = `${import.meta.env.BASE_URL}pdfjs-${pdfjs.version}/`;
    import './style.css';
    import view from './view.html?raw';
    
@@ -217,7 +220,13 @@
        let doc;
        try {
          // .slice(): pdf.js "consuma" il buffer che riceve, a noi serve intatto per pdf-lib
-         doc = await pdfjs.getDocument({ data: bytes.slice() }).promise;
+         doc = await pdfjs.getDocument({
+           data: bytes.slice(),
+           useWasm: false,                                         // decodificatori in JavaScript: la CSP resta rigida
+           wasmUrl: `${PDFJS_ASSETS}wasm/`,                         // JBIG2 e JPEG 2000 (PDF scansionati)
+           standardFontDataUrl: `${PDFJS_ASSETS}standard_fonts/`,   // Helvetica, Times, ZapfDingbats…
+           cMapUrl: `${PDFJS_ASSETS}cmaps/`,                        // testo cinese, giapponese, coreano
+         }).promise;
        } catch (err) {
          throw new Error(err?.name === 'PasswordException' ? 'Il PDF è protetto da password.' : 'Impossibile leggere questo PDF.');
        }
