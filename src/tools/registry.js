@@ -13,6 +13,8 @@
      accent   → colore della card (variabile CSS in src/styles/style.css)
      icon     → disegno 16×16 in pixel (contenuto dell'<svg>)
      load     → scarica il tool (tool.js) quando lo apri
+     hidden   → (facoltativo) true = niente card nella dashboard: la pagina
+                si apre da un link (es. #crediti nel footer)
    ============================================================= */
 export const TOOLS = [
   {
@@ -112,5 +114,11 @@ export const TOOLS = [
       <rect x="5" y="5" width="2" height="2"/><rect x="9" y="5" width="2" height="2"/>
       <rect x="4" y="9" width="1" height="1"/><rect x="5" y="10" width="6" height="1"/><rect x="11" y="9" width="1" height="1"/>`,
     load: () => import('./pixel/tool.js'),
+  },
+  {
+    id: 'credits',
+    title: 'Crediti e licenze',
+    hidden: true, // pagina, non un tool: si apre dal link nel footer
+    load: () => import('./credits/tool.js'),
   },
 ];

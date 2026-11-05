@@ -1,0 +1,46 @@
+/* PixelTools — src/tools/credits/style.css · PAGINA: CREDITI E LICENZE */
+.credits-intro { margin: 0 0 8px; color: var(--muted); }
+.credits-panel .step-title { margin-top: 22px; }
+
+.credit-list { display: grid; gap: 12px; }
+
+.credit {
+  padding: 14px 16px;
+  border: var(--border);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.credit h4 { margin: 0 0 6px; font-size: 1.05rem; font-weight: 600; overflow-wrap: anywhere; }
+.credit-version { font-weight: 400; color: var(--muted); font-size: .9rem; }
+.credit-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 0 0 6px;
+  font-size: .9rem;
+  overflow-wrap: anywhere;
+}
+.credit .hint { margin: 0 0 6px; }
+.credit a { font-size: .9rem; font-weight: 500; }
+
+.credit details { margin-top: 8px; }
+.credit summary {
+  cursor: pointer;
+  font-size: .9rem;
+  font-weight: 600;
+  width: fit-content;
+}
+.credit pre {
+  max-height: 320px;
+  overflow: auto;
+  margin: 8px 0 0;
+  padding: 12px;
+  background: var(--paper-2);
+  border: var(--border);
+  border-radius: var(--radius);
+  font-size: .75rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

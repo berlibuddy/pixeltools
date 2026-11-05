@@ -32,7 +32,7 @@
       1. DASHBOARD — una card per ogni tool del registro
       ============================================================= */
    function renderDashboard() {
-     const cards = TOOLS.map((tool) => {
+     const cards = TOOLS.filter((tool) => !tool.hidden).map((tool) => {
        const card = h('a', { class: 'tool-card', href: `#${tool.id}`, style: `--accent: ${tool.accent}` });
        // l'icona è markup statico nostro (registry.js): sicuro
        const tpl = document.createElement('template');
