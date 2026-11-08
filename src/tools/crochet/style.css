@@ -39,7 +39,7 @@
     padding: 8px 10px;
     background: var(--paper);
     border: var(--border);
-    border-radius: 2px;
+    border-radius: var(--radius-sm);
   }
   .legend-swatch {
     width: 24px;

@@ -4,7 +4,8 @@
    - sfondo bianco panna, senza righe
    - DASHBOARD: card colorate (sgargianti ma dosate), inchiostro blu notte
    - AREA DI LAVORO: bianco e nero (solo una striscia del colore del tool)
-   - bordi sottili 1.5px, ombre nette a blocco, bottoni "pressable"
+   - bordi 2px (variabile --bw), angoli morbidi, ombre nette a blocco,
+     bottoni "pressable"
    - VT323 (pixel) solo per logo e titoli · Space Grotesk per i testi
    ============================================================= */
 
@@ -26,13 +27,16 @@
   --ink: #1F2347;         /* blu notte (dashboard) */
   --muted: #3d4263;
 
-  /* Bordi sottili e ombre nette a blocco */
-  --border: 1.5px solid var(--ink);
-  --border-thick: 1.5px solid var(--ink);
+  /* Bordi e ombre nette a blocco.
+     --bw = spessore di TUTTI i bordi: per cambiarlo basta questa riga. */
+  --bw: 2px;
+  --border: var(--bw) solid var(--ink);
+  --border-thick: var(--bw) solid var(--ink);
   --shadow: 4px 4px 0 var(--ink);
   --shadow-lg: 6px 6px 0 var(--ink);
   --shadow-sm: 2px 2px 0 var(--ink);
-  --radius: 3px;
+  --radius: 6px;          /* card e pannelli */
+  --radius-sm: 4px;       /* bottoni, campi, elementi piccoli */
 
   /* Un colore per ogni modulo: sgargianti ma dosati */
   --c-merge: #FF7A6B;     /* corallo */
@@ -46,7 +50,7 @@
   --c-pixel: #4FD8C9;     /* verde acqua */
   --c-sprite: #C6F25A;    /* lime */
 
-  /* Colore del modulo attivo (sovrascritto inline su ogni sezione) */
+  /* Colore del modulo attivo: lo imposta ogni tool (vedi sotto) e ogni card (main.js) */
   --accent: #FFD54A;
 
   /* Font */
@@ -61,8 +65,8 @@
 .workspace {
   --ink: #111111;
   --muted: #555555;
-  --border: 1.5px solid #111111;
-  --border-thick: 1.5px solid #111111;
+  --border: var(--bw) solid #111111;
+  --border-thick: var(--bw) solid #111111;
   --shadow: 3px 3px 0 #111111;
   --shadow-lg: 4px 4px 0 #111111;
   --shadow-sm: 2px 2px 0 #111111;
@@ -227,19 +231,19 @@ main.container { padding-bottom: 56px; } /* "main.container" vince su ".containe
   padding: 6px 12px;
   background: var(--ink);
   color: var(--paper);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   font-size: .875rem;
   font-weight: 600;
 }
 
 /* Icona pixel: disegno 16×16 mostrato a 48px (×3) → resta nitida */
 .px-icon {
-  width: 65px;
-  height: 65px;
+  width: 66px;   /* 66 − 2×7 (padding) − 2×2 (bordo) = 48px = 16×3 */
+  height: 66px;
   padding: 7px;
   background: var(--paper);
   border: var(--border);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   fill: var(--ink);
 }
 
@@ -258,7 +262,7 @@ main.container { padding-bottom: 56px; } /* "main.container" vince su ".containe
   color: var(--ink);
   background: var(--paper);
   border: var(--border);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   box-shadow: 3px 3px 0 var(--ink);
   cursor: pointer;
   user-select: none;
@@ -331,7 +335,7 @@ main.container { padding-bottom: 56px; } /* "main.container" vince su ".containe
   padding: 32px 16px;
   text-align: center;
   background: var(--paper-2);
-  border: 1.5px dashed var(--ink);
+  border: var(--bw) dashed var(--ink);
   border-radius: var(--radius);
   cursor: pointer;
   transition: background-color .1s;
@@ -350,7 +354,7 @@ main.container { padding-bottom: 56px; } /* "main.container" vince su ".containe
   margin-bottom: 8px;
   background: var(--paper);
   border: var(--border);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   box-shadow: var(--shadow-sm);
   font-size: 1.1rem;
   color: var(--ink) !important;
@@ -400,7 +404,7 @@ main.container { padding-bottom: 56px; } /* "main.container" vince su ".containe
   width: 48px;
   height: 48px;
   border: var(--border);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
 }
 .file-thumb { object-fit: cover; background: var(--paper-2); }
 .file-type {
@@ -423,7 +427,7 @@ main.container { padding-bottom: 56px; } /* "main.container" vince su ".containe
   display: inline-block;
   padding: 2px 8px;
   border: var(--border);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   background: var(--ink);
   color: var(--paper);
   font-size: .8rem;
@@ -457,7 +461,7 @@ select {
   color: var(--ink);
   background: var(--paper);
   border: var(--border);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   box-shadow: none;
 }
 select {
@@ -491,7 +495,7 @@ input[type="range"]::-webkit-slider-runnable-track {
   height: 8px;
   background: var(--paper);
   border: var(--border);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
 }
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -506,7 +510,7 @@ input[type="range"]::-moz-range-track {
   height: 5px;
   background: var(--paper);
   border: var(--border);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
 }
 input[type="range"]::-moz-range-thumb {
   width: 15px;
@@ -550,7 +554,7 @@ input[type="range"]::-moz-range-thumb {
   padding: 3px;
   background: var(--paper);
   border: var(--border);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
 }
 .progress-bar {
   width: 0;
@@ -590,7 +594,7 @@ input[type="range"]::-moz-range-thumb {
   font-size: .9rem;
   background: var(--paper-2);
   border: var(--border);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -600,7 +604,7 @@ input[type="range"]::-moz-range-thumb {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   border: var(--border);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
 }
 .segmented label { cursor: pointer; }
@@ -625,7 +629,7 @@ input[type="range"]::-moz-range-thumb {
   position: relative;
   background: var(--paper);
   border: var(--border);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
 }
 /* linea guida della firma */
 .sig-pad-wrap::after {
@@ -673,7 +677,7 @@ input[type="range"]::-moz-range-thumb {
   padding: 28px 16px;
   background: #e7e7e7;
   border: var(--border);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   overflow: auto;
 }
 .stage-empty { align-self: center; color: var(--muted); font-size: 1rem; text-align: center; }
@@ -718,7 +722,7 @@ input[type="range"]::-moz-range-thumb {
   color: var(--paper);
   background: var(--ink);
   border: var(--border);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
 }
 .placed:hover .placed-del,
@@ -730,7 +734,7 @@ input[type="range"]::-moz-range-thumb {
   display: flex;
   flex-direction: column;
   border: var(--border);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
 }
 .choice-list label { cursor: pointer; }
@@ -759,7 +763,7 @@ input[type="range"]::-moz-range-thumb {
   font-weight: 500;
   background: var(--paper-2);
   border: 1.5px dashed #9a9a9a;
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
 }
 
 .cr-preview { padding: 18px; display: flex; flex-direction: column; gap: 14px; }
@@ -783,7 +787,7 @@ input[type="range"]::-moz-range-thumb {
   font-size: .8rem;
   font-weight: 500;
   border: var(--border);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
 }
 .cr-stage {
   justify-content: safe center; /* se lo schema è largo, si scorre senza tagliare il bordo sinistro */
