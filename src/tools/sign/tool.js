@@ -72,6 +72,7 @@
        signature: null,       // { dataUrl, ratio } firma ritagliata
        hasInk: false,
        renderTask: null,
+       loadId: 0,             // numero dell'ultimo PDF scelto: se ne arriva un altro, vince l'ultimo
      };
    
      /* ---------- 5a. Formati della data di oggi ---------- */
@@ -214,24 +215,34 @@
    
      async function loadPdf(file) {
        pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+       const loadId = ++S.loadId;
+       const isStale = () => loadId !== S.loadId; // nel frattempo è stato scelto un altro PDF?
        setStatus(status, 'Apro il PDF…');
    
        const bytes = new Uint8Array(await file.arrayBuffer());
+       if (isStale()) return;
+       // .slice(): pdf.js "consuma" il buffer che riceve, a noi serve intatto per pdf-lib
+       const task = pdfjs.getDocument({
+         data: bytes.slice(),
+         useWasm: false,                                         // decodificatori in JavaScript: la CSP resta rigida
+         wasmUrl: `${PDFJS_ASSETS}wasm/`,                         // JBIG2 e JPEG 2000 (PDF scansionati)
+         standardFontDataUrl: `${PDFJS_ASSETS}standard_fonts/`,   // Helvetica, Times, ZapfDingbats…
+         cMapUrl: `${PDFJS_ASSETS}cmaps/`,                        // testo cinese, giapponese, coreano
+       });
        let doc;
        try {
-         // .slice(): pdf.js "consuma" il buffer che riceve, a noi serve intatto per pdf-lib
-         doc = await pdfjs.getDocument({
-           data: bytes.slice(),
-           useWasm: false,                                         // decodificatori in JavaScript: la CSP resta rigida
-           wasmUrl: `${PDFJS_ASSETS}wasm/`,                         // JBIG2 e JPEG 2000 (PDF scansionati)
-           standardFontDataUrl: `${PDFJS_ASSETS}standard_fonts/`,   // Helvetica, Times, ZapfDingbats…
-           cMapUrl: `${PDFJS_ASSETS}cmaps/`,                        // testo cinese, giapponese, coreano
-         }).promise;
+         doc = await task.promise;
        } catch (err) {
+         task.destroy(); // libera il worker anche quando il PDF non si apre
+         if (isStale()) return;
          throw new Error(err?.name === 'PasswordException' ? 'Il PDF è protetto da password.' : 'Impossibile leggere questo PDF.');
        }
+       if (isStale()) { task.destroy(); return; } // arrivato tardi: l'utente ha già scelto un altro PDF
    
-       S.pdfjsDoc?.destroy();
+       // Chiude il PDF precedente e libera memoria. In pdf.js 6 si fa dal suo "loadingTask"
+       // (doc.destroy() non esiste più). Prima fermiamo un eventuale disegno ancora in corso.
+       S.renderTask?.cancel();
+       S.pdfjsDoc?.loadingTask.destroy();
        Object.assign(S, {
          pdfBytes: bytes, fileName: file.name, pdfjsDoc: doc,
          pageIndex: 0, placements: [], viewports: new Map(), selectedId: null,
@@ -243,13 +254,23 @@
        pageWrap.hidden = false;
    
        await renderPage();
+       if (isStale()) return;
        updateButtons();
        setStatus(status, 'PDF caricato. Scegli Firma, Data o Testo e clicca sulla pagina.', 'info');
      }
    
      async function renderPage() {
-       if (!S.pdfjsDoc) return;
-       const page = await S.pdfjsDoc.getPage(S.pageIndex + 1);
+       const doc = S.pdfjsDoc;
+       if (!doc) return;
+       // Se mentre aspettiamo arriva un altro PDF, questo disegno non serve più: ci fermiamo in silenzio
+       let page;
+       try {
+         page = await doc.getPage(S.pageIndex + 1);
+       } catch (err) {
+         if (doc !== S.pdfjsDoc) return;
+         throw err;
+       }
+       if (doc !== S.pdfjsDoc) return;
        const base = page.getViewport({ scale: 1 }); // scala 1 → dimensioni in punti PDF
        S.viewports.set(S.pageIndex, base);
    
@@ -267,7 +288,7 @@
        try {
          await task.promise;
        } catch (err) {
-         if (err?.name !== 'RenderingCancelledException') throw err;
+         if (err?.name !== 'RenderingCancelledException' && doc === S.pdfjsDoc) throw err;
        }
      }
    
