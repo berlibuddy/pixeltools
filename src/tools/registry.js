@@ -10,12 +10,24 @@
      title    → titolo della scheda del browser ("… — PixelTools")
      desc     → descrizione della card
      section  → sezione della dashboard: pdf · images · pixel · files
-     accent   → colore della card (variabile CSS in src/styles/style.css)
+                (il nome sulla targhetta della card è in SECTIONS, qui sotto)
+     accent   → colore del tool: linguetta e quadratino della card
+                (variabile CSS in src/styles/style.css)
      icon     → disegno 16×16 in pixel (contenuto dell'<svg>)
      load     → scarica il tool (tool.js) quando lo apri
      hidden   → (facoltativo) true = niente card nella dashboard: la pagina
                 si apre da un link (es. #crediti nel footer)
    ============================================================= */
+
+/* Nome di ogni sezione, come appare sulla targhetta della card
+   (servirà anche per le categorie a pillole, più avanti). */
+export const SECTIONS = {
+  pdf: 'PDF',
+  images: 'Immagini',
+  pixel: 'Creatività',
+  files: 'File',
+};
+
 export const TOOLS = [
   {
     id: 'merge',

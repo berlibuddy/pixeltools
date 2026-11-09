@@ -2,7 +2,8 @@
    PixelTools — style.css
    Stile: "Pixel-Chic" (vedi regole di design nel documento del progetto)
    - sfondo bianco panna, senza righe
-   - DASHBOARD: card colorate (sgargianti ma dosate), inchiostro blu notte
+   - DASHBOARD: card bianche "a cartellina", col colore del tool
+     (sgargiante ma dosato) su linguetta e icona; inchiostro blu notte
    - AREA DI LAVORO: bianco e nero (solo una striscia del colore del tool)
    - bordi 2px (variabile --bw), angoli morbidi, ombre nette a blocco,
      bottoni "pressable"
@@ -204,46 +205,112 @@ main.container { padding-bottom: 56px; } /* "main.container" vince su ".containe
 
 .tool-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 32px 24px;   /* più spazio in verticale: sopra ogni card c'è la linguetta */
 }
 
+/* Card = cartellina bianca. Il colore del tool (--accent, da main.js)
+   sta solo sulla linguetta e sul quadratino dell'icona. */
 .tool-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding-top: 16px;   /* spazio per la linguetta */
+  color: var(--ink);
+  text-decoration: none;
+  transition: transform .06s ease;
+}
+/* Linguetta: sta dietro la card, ne sporge solo la parte alta */
+.tool-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 18px;
+  width: 42%;
+  height: 24px;
+  background: var(--accent);
+  border: var(--border);
+  border-radius: var(--radius) var(--radius) 0 0;
+  box-shadow: var(--shadow);
+}
+.card-body {
+  position: relative;   /* copre la parte bassa della linguetta */
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 22px;
-  min-height: 214px;
-  background: var(--accent);
-  border: var(--border-thick);
+  min-height: 210px;
+  padding: 18px;
+  background: var(--paper);
+  border: var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  text-decoration: none;
-  transition: transform .06s ease, box-shadow .06s ease;
+  transition: box-shadow .06s ease;
 }
-.tool-card:hover { transform: translate(-2px, -2px); box-shadow: var(--shadow-lg); }
-.tool-card:active { transform: translate(2px, 2px); box-shadow: var(--shadow-sm); }
-.tool-card h2 { font-size: 2.25rem; margin: 4px 0 0; }
-.tool-card p { font-size: .95rem; }
-.tool-card .cta {
-  margin-top: auto;
-  align-self: flex-start;
-  padding: 6px 12px;
-  background: var(--ink);
-  color: var(--paper);
+/* "Pressable": si alza al passaggio, si abbassa al click */
+.tool-card:hover { transform: translate(-2px, -2px); }
+.tool-card:hover .card-body { box-shadow: var(--shadow-lg); }
+.tool-card:active { transform: translate(2px, 2px); }
+.tool-card:active .card-body { box-shadow: var(--shadow-sm); }
+
+.card-top {
+  display: flex;
+  flex-wrap: wrap;   /* card strette: la targhetta va sotto l'icona */
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+/* Quadratino colorato: 64 − 2×2 (bordo) = 60, icona 48 al centro (6px per lato) */
+.card-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  background: var(--accent);
+  border: var(--border);
   border-radius: var(--radius-sm);
-  font-size: .875rem;
-  font-weight: 600;
 }
+.card-tag {
+  padding: 3px 8px;
+  background: var(--bg);
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  font-size: .75rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.tool-card h2 {
+  margin: 0;
+  font-family: var(--font-text);
+  font-size: 1.3125rem;   /* 21px */
+  font-weight: 700;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+.tool-card p { font-size: .875rem; line-height: 1.45; color: var(--muted); }
+/* Freccia in un quadrato scuro, in basso a destra */
+.card-go {
+  margin-top: auto;
+  align-self: flex-end;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: var(--ink);
+  border-radius: var(--radius-sm);
+}
+.card-arrow { display: block; width: 16px; height: 16px; fill: var(--paper); }
 
 /* Icona pixel: disegno 16×16 mostrato a 48px (×3) → resta nitida */
 .px-icon {
-  width: 66px;   /* 66 − 2×7 (padding) − 2×2 (bordo) = 48px = 16×3 */
-  height: 66px;
-  padding: 7px;
-  background: var(--paper);
-  border: var(--border);
-  border-radius: var(--radius-sm);
+  display: block;
+  width: 48px;
+  height: 48px;
   fill: var(--ink);
 }
 
@@ -813,6 +880,20 @@ input[type="range"]::-moz-range-thumb {
   .result-item { grid-template-columns: 40px minmax(0, 1fr); }
   .result-item > :nth-child(n+3) { grid-column: 2; justify-self: start; }
   .file-thumb, .file-type { width: 40px; height: 40px; }
+
+  /* Dashboard sul telefono: 2 colonne, solo icona, targhetta e nome
+     (tutta la card si tocca) */
+  .tool-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 16px; }
+  .tool-card { padding-top: 13px; }
+  .tool-card::before { left: 12px; width: 44%; height: 20px; box-shadow: var(--shadow-sm); }
+  .card-body { min-height: 140px; padding: 12px; gap: 10px; }
+  .card-top { gap: 6px; }
+  .card-tile { width: 48px; height: 48px; }   /* 48 − 2×2 = 44, icona 32 (6px per lato) */
+  .px-icon { width: 32px; height: 32px; }     /* 16×2 → sempre nitida */
+  .card-tag { padding: 2px 6px; font-size: .6875rem; }
+  .tool-card h2 { margin-top: auto; font-size: 1.0625rem; line-height: 1.15; }
+  .tool-card p,
+  .card-go { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

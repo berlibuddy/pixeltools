@@ -26,23 +26,37 @@
    'use strict';
 
    import { $, $$, h } from './core/dom.js';
-   import { TOOLS } from './tools/registry.js';
+   import { TOOLS, SECTIONS } from './tools/registry.js';
 
    /* =============================================================
       1. DASHBOARD — una card per ogni tool del registro
+      Card bianca con: linguetta colorata (disegnata dal CSS), quadratino
+      colorato con l'icona, targhetta della categoria, nome, descrizione
+      e freccia. Sul telefono il CSS lascia solo icona, targhetta e nome.
       ============================================================= */
+   const ARROW = '<path d="M3 7h8v-2h1v1h1v1h1v2h-1v1h-1v1h-1v-2h-8z"/>';
+
+   /** SVG pixel 16×16 da markup statico nostro (registry.js / ARROW): sicuro */
+   function pixelSvg(cls, shapes) {
+     const tpl = document.createElement('template');
+     tpl.innerHTML = `<svg class="${cls}" viewBox="0 0 16 16" aria-hidden="true" shape-rendering="crispEdges">${shapes}</svg>`;
+     return tpl.content.firstElementChild;
+   }
+
    function renderDashboard() {
      const cards = TOOLS.filter((tool) => !tool.hidden).map((tool) => {
        const card = h('a', { class: 'tool-card', href: `#${tool.id}` });
        card.style.setProperty('--accent', tool.accent); // così (e non con style="…") la CSP lo permette
-       // l'icona è markup statico nostro (registry.js): sicuro
-       const tpl = document.createElement('template');
-       tpl.innerHTML = `<svg class="px-icon" viewBox="0 0 16 16" aria-hidden="true" shape-rendering="crispEdges">${tool.icon}</svg>`;
        card.append(
-         tpl.content.firstElementChild,
-         h('h2', {}, tool.name),
-         h('p', {}, tool.desc),
-         h('span', { class: 'cta' }, 'Apri →'),
+         h('div', { class: 'card-body' },
+           h('div', { class: 'card-top' },
+             h('span', { class: 'card-tile' }, pixelSvg('px-icon', tool.icon)),
+             h('span', { class: 'card-tag' }, SECTIONS[tool.section] ?? tool.section),
+           ),
+           h('h2', {}, tool.name),
+           h('p', {}, tool.desc),
+           h('span', { class: 'card-go' }, pixelSvg('card-arrow', ARROW)),
+         ),
        );
        return card;
      });
