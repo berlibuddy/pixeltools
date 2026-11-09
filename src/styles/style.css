@@ -881,8 +881,9 @@ input[type="range"]::-moz-range-thumb {
   .result-item > :nth-child(n+3) { grid-column: 2; justify-self: start; }
   .file-thumb, .file-type { width: 40px; height: 40px; }
 
-  /* Dashboard sul telefono: 2 colonne, solo icona, targhetta e nome
-     (tutta la card si tocca) */
+  /* Dashboard sul telefono: 2 colonne, solo icona, categoria e nome
+     (tutta la card si tocca). La categoria diventa testo leggero,
+     senza riquadro, sempre di fianco all'icona. */
   .tool-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 16px; }
   .tool-card { padding-top: 13px; }
   .tool-card::before { left: 12px; width: 44%; height: 20px; box-shadow: var(--shadow-sm); }
@@ -890,10 +891,24 @@ input[type="range"]::-moz-range-thumb {
   .card-top { gap: 6px; }
   .card-tile { width: 48px; height: 48px; }   /* 48 − 2×2 = 44, icona 32 (6px per lato) */
   .px-icon { width: 32px; height: 32px; }     /* 16×2 → sempre nitida */
-  .card-tag { padding: 2px 6px; font-size: .6875rem; }
+  .card-tag {
+    padding: 0;
+    background: none;
+    border: 0;
+    border-radius: 0;
+    font-size: .6875rem;
+    letter-spacing: .05em;
+    color: var(--muted);
+  }
   .tool-card h2 { margin-top: auto; font-size: 1.0625rem; line-height: 1.15; }
   .tool-card p,
   .card-go { display: none; }
+}
+/* Telefoni molto stretti: "CREATIVITÀ" non starebbe più di fianco
+   all'icona (va a capo sotto i 332px) → la categoria si nasconde,
+   così le card restano tutte uguali. */
+@media (max-width: 339px) {
+  .card-tag { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
