@@ -2,7 +2,8 @@
 .credits-intro { margin: 0 0 8px; color: var(--muted); }
 .credits-panel .step-title { margin-top: 22px; }
 
-.credit-list { display: grid; gap: 12px; }
+/* minmax(0, 1fr): una scheda non può allargare la pagina (telefoni stretti) */
+.credit-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
 
 .credit {
   padding: 14px 16px;
@@ -21,7 +22,7 @@
   font-size: .9rem;
   overflow-wrap: anywhere;
 }
-.credit .hint { margin: 0 0 6px; }
+.credit .hint { margin: 0 0 6px; overflow-wrap: anywhere; }   /* nomi di file lunghi: vanno a capo */
 .credit a { font-size: .9rem; font-weight: 500; }
 
 .credit details { margin-top: 8px; }

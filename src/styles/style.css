@@ -908,6 +908,12 @@ input[type="range"]::-moz-range-thumb {
   .result-item > :nth-child(n+3) { grid-column: 2; justify-self: start; }
   .file-thumb, .file-type { width: 40px; height: 40px; }
 
+  /* Bottoni dei tool sul telefono: sempre sulla stessa riga, si dividono
+     lo spazio in proporzione al testo (niente più uno sopra l'altro) */
+  .actions:not(.actions-left) { flex-wrap: nowrap; gap: 10px; }
+  .actions:not(.actions-left) > .btn { flex: 1 1 auto; min-width: 0; padding-inline: 12px; }
+  .wide-only { display: none; }   /* parole che sul telefono non stanno (es. "Scarica schema PDF" → "Scarica PDF") */
+
   /* Dashboard sul telefono: 2 colonne, solo icona, categoria e nome
      (tutta la card si tocca). La categoria diventa testo leggero,
      senza riquadro, sempre di fianco all'icona. */
