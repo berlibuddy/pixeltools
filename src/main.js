@@ -77,13 +77,34 @@
     * Se il tool ha uno stile suo (style.css), Vite lo carica insieme al tool.
     */
    const loadingTools = {}; // id → Promise: ogni tool si carica una volta sola
-   
+
+   /**
+    * Intestazione del tool = la stessa "cartellina" della sua card:
+    * linguetta colorata (disegnata dal CSS), quadratino con l'icona e
+    * categoria, presi dal registro → ogni tool nuovo la ha già pronta.
+    * Il bottone "Tutti gli strumenti" esce dal riquadro e va sopra.
+    * Gira una volta sola per tool, prima che la pagina compaia.
+    */
+   const BACK_ARROW = '<path d="M13 7h-8v-2h-1v1h-1v1h-1v2h1v1h1v1h1v-2h8z"/>';
+
+   function decorateHeader(ws, tool) {
+     const header = ws.querySelector('.ws-header');
+     const back = header.querySelector('.ws-back');
+     const folder = h('div', { class: 'ws-folder' });
+     back.prepend(pixelSvg('back-arrow', BACK_ARROW));
+     header.before(back, folder);
+     folder.append(header);
+     if (tool.icon) header.prepend(h('span', { class: 'card-tile' }, pixelSvg('px-icon', tool.icon)));
+     if (tool.section) header.append(h('span', { class: 'card-tag' }, SECTIONS[tool.section] ?? tool.section));
+   }
+
    function loadTool(id) {
      if (!Object.hasOwn(TOOL_BY_ID, id)) return Promise.resolve();
      loadingTools[id] ??= TOOL_BY_ID[id].load().then(({ view, init }) => {
        const tpl = document.createElement('template');
        tpl.innerHTML = view; // markup statico nostro (view.html): sicuro
        const ws = tpl.content.querySelector('.workspace');
+       decorateHeader(ws, TOOL_BY_ID[id]);
        $('main').append(ws);
        init(ws, toolHooks); // toolHooks: il tool può dire cosa fare quando diventa visibile
      }).catch((err) => {

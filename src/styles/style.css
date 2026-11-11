@@ -73,7 +73,7 @@
   --shadow-sm: 2px 2px 0 #111111;
 }
 
-/* Colore di ogni tool (la striscia in alto nell'area di lavoro).
+/* Colore di ogni tool (linguetta e quadratino dell'intestazione).
    Sta qui e non in uno style="…" nel view.html: la CSP (vite.config.js)
    blocca gli stili scritti dentro i tag. */
 .workspace[data-tool="merge"]    { --accent: var(--c-merge); }
@@ -359,28 +359,48 @@ main.container { padding-bottom: 56px; } /* "main.container" vince su ".containe
 .btn-danger:hover { background: var(--ink); color: var(--paper); }
 
 /* ---------- 6. Area di lavoro (workspace) ---------- */
-/* Intestazione del tool: bianca, con una sottile striscia del colore del tool */
-.ws-header {
+/* "← Tutti gli strumenti": sopra l'intestazione, fuori dal riquadro */
+.ws-back {
+  gap: 8px;
+  min-height: 40px;
+  margin-top: 28px;
+}
+.back-arrow { display: block; width: 16px; height: 16px; fill: currentColor; }
+
+/* Intestazione del tool = la cartellina della sua card (la costruisce
+   main.js): linguetta e quadratino del colore del tool, il resto bianco */
+.ws-folder {
   position: relative;
+  margin: 20px 0 24px;
+  padding-top: 16px;   /* spazio per la linguetta */
+}
+/* Linguetta: sta dietro il riquadro, ne sporge solo la parte alta */
+.ws-folder::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 18px;
+  width: 220px;
+  height: 24px;
+  background: var(--accent);
+  border: var(--border);
+  border-radius: var(--radius) var(--radius) 0 0;
+  box-shadow: var(--shadow);
+}
+.ws-header {
+  position: relative;   /* copre la parte bassa della linguetta */
   display: flex;
   align-items: center;
   gap: 20px;
-  margin: 32px 0 24px;
-  padding: 26px 22px 18px;
+  padding: 22px;
   background: var(--paper);
   border: var(--border-thick);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  overflow: hidden;
 }
-.ws-header::before {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 6px;
-  background: var(--accent);
-  border-bottom: var(--border);
-}
+.ws-header .card-tile { flex: 0 0 auto; }
+.ws-header > div { flex: 1; min-width: 0; }
+.ws-header .card-tag { align-self: flex-start; }
 .ws-header h2 { font-size: 2.75rem; margin: 0 0 4px; }
 .ws-header h2:focus { outline: none; }
 .ws-header p { font-size: .95rem; color: var(--muted); }
@@ -873,8 +893,15 @@ input[type="range"]::-moz-range-thumb {
 @media (max-width: 600px) {
   html { font-size: 15px; }
   .hero h1 { font-size: 3.2rem; }
-  .ws-header h2 { font-size: 2.3rem; }
-  .ws-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+  /* Intestazione sul telefono: icona a sinistra, titolo accanto,
+     categoria (testo leggero, come nelle card) nell'angolo in alto */
+  .ws-back { min-height: 44px; margin-top: 20px; }   /* 44px: comodo col pollice */
+  .ws-folder { margin-top: 16px; padding-top: 13px; }
+  .ws-folder::before { left: 12px; width: 44%; height: 20px; box-shadow: var(--shadow-sm); }
+  .ws-header { align-items: flex-start; gap: 12px; padding: 14px; }
+  .ws-header .card-tag { position: absolute; top: 14px; right: 14px; }
+  .ws-header > div:not(:last-child) h2 { padding-right: 76px; }   /* spazio per la categoria, solo accanto al titolo */
+  .ws-header h2 { font-size: 2rem; }
   .file-item { grid-template-columns: auto 40px minmax(0, 1fr); }
   .file-item .file-actions { grid-column: 1 / -1; justify-content: flex-end; }
   .result-item { grid-template-columns: 40px minmax(0, 1fr); }
@@ -909,6 +936,7 @@ input[type="range"]::-moz-range-thumb {
    così le card restano tutte uguali. */
 @media (max-width: 339px) {
   .card-tag { display: none; }
+  .ws-header > div:not(:last-child) h2 { padding-right: 0; }   /* niente categoria → tutto lo spazio al titolo */
 }
 
 @media (prefers-reduced-motion: reduce) {
