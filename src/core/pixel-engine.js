@@ -70,28 +70,28 @@ export function boxSample(src, W, H) {
 }
 
 /**
- * k-means: trova k colori rappresentativi tra n colori (px = 3 valori per colore).
- * Partenza: colore medio + i colori "più lontani" (risultato sempre uguale);
- * poi si ripete: assegna ogni colore al centro più vicino → ricalcola le medie.
+ * Partenza del k-means: aggiunge ai centri i colori "più lontani" da quelli già scelti,
+ * finché sono k (risultato sempre uguale). Si ferma prima se l'immagine ha meno colori.
  */
-export function quantize(px, n, k) {
-  const d2 = (i, c) => colorDist(px[i * 3], px[i * 3 + 1], px[i * 3 + 2], c[0], c[1], c[2]);
-  let mr = 0, mg = 0, mb = 0;
-  for (let i = 0; i < n; i++) { mr += px[i * 3]; mg += px[i * 3 + 1]; mb += px[i * 3 + 2]; }
-  const centers = [[mr / n, mg / n, mb / n]];
+function farthestFirst(px, n, k, centers) {
   const minD = new Float64Array(n).fill(Infinity);
   while (centers.length < Math.min(k, n)) {
     const last = centers[centers.length - 1];
     let best = -1, bi = 0;
     for (let i = 0; i < n; i++) {
-      const d = d2(i, last);
+      const d = colorDist(px[i * 3], px[i * 3 + 1], px[i * 3 + 2], last[0], last[1], last[2]);
       if (d < minD[i]) minD[i] = d;
       if (minD[i] > best) { best = minD[i]; bi = i; }
     }
     if (best < 1) break; // l'immagine ha meno colori di quelli richiesti
     centers.push([px[bi * 3], px[bi * 3 + 1], px[bi * 3 + 2]]);
   }
+  return centers;
+}
 
+/** k-means vero e proprio: assegna ogni colore al centro più vicino → ricalcola le medie (max 12 giri) */
+function kmeans(px, n, centers) {
+  const d2 = (i, c) => colorDist(px[i * 3], px[i * 3 + 1], px[i * 3 + 2], c[0], c[1], c[2]);
   const labels = new Uint8Array(n);
   const assign = () => {
     let changed = 0;
@@ -117,30 +117,70 @@ export function quantize(px, n, k) {
   assign();
   return { centers, labels };
 }
+
 /**
- * Colori "veri" di una foto (senza trasparenza): k-means su una copia piccola
- * (max 200 px di lato). Così i colori nascono dai pixel della foto e non dalle
- * medie delle celle, che sui bordi mescolano due colori (nero + arancione = marrone).
+ * k-means: trova k colori rappresentativi tra n colori (px = 3 valori per colore).
+ * Partenza: colore medio + i colori "più lontani" (usato da Pixel Art).
+ */
+export function quantize(px, n, k) {
+  let mr = 0, mg = 0, mb = 0;
+  for (let i = 0; i < n; i++) { mr += px[i * 3]; mg += px[i * 3 + 1]; mb += px[i * 3 + 2]; }
+  return kmeans(px, n, farthestFirst(px, n, k, [[mr / n, mg / n, mb / n]]));
+}
+
+/**
+ * Colori "veri" di una foto (senza trasparenza), per l'Uncinetto.
+ * - Campioni presi dalla foto così come sono (circa 200 per lato, nessuna media):
+ *   le medie sui bordi inventano colori finti (nero + arancione = marrone).
+ * - Il k-means parte dal colore PIÙ PRESENTE (non dal colore medio: in una foto
+ *   con cielo azzurro e prato verde il colore medio sta a metà e li unisce in uno).
  * Restituisce [[r,g,b], …] arrotondati.
  */
 export function paletteFromImage(src, k) {
-  const s = Math.min(1, 200 / Math.max(src.width, src.height));
-  const w = Math.max(1, Math.round(src.width * s));
-  const h = Math.max(1, Math.round(src.height * s));
-  const { rgb } = boxSample(src, w, h);
-  return quantize(rgb, w * h, k).centers.map((c) => c.map(Math.round));
+  const { width: sw, height: sh, data: sd } = src;
+  const step = Math.max(1, Math.round(Math.max(sw, sh) / 200));
+  const half = Math.floor(step / 2);
+  const samples = [];
+  for (let y = half; y < sh; y += step) {
+    for (let x = half; x < sw; x += step) {
+      const i = (y * sw + x) * 4;
+      samples.push(sd[i], sd[i + 1], sd[i + 2]);
+    }
+  }
+  const px = Float32Array.from(samples);
+  const n = px.length / 3;
+  // Colore più presente: si raggruppano i colori simili (16 livelli per canale) e si prende il gruppo più grande
+  const groups = new Map();
+  for (let i = 0; i < n; i++) {
+    const key = ((px[i * 3] >> 4) << 8) | ((px[i * 3 + 1] >> 4) << 4) | (px[i * 3 + 2] >> 4);
+    const g = groups.get(key) || [0, 0, 0, 0];
+    g[0] += px[i * 3]; g[1] += px[i * 3 + 1]; g[2] += px[i * 3 + 2]; g[3]++;
+    groups.set(key, g);
+  }
+  let top = null;
+  for (const g of groups.values()) if (!top || g[3] > top[3]) top = g;
+  const start = [[top[0] / top[3], top[1] / top[3], top[2] / top[3]]];
+  return kmeans(px, n, farthestFirst(px, n, k, start)).centers.map((c) => c.map(Math.round));
 }
 
 /**
  * Riduce un ImageData a W×H celle "a maggioranza": ogni pixel della foto vota
  * il colore più vicino della palette, la cella prende il colore con più voti.
  * A differenza della media, non inventa colori nuovi sui bordi.
+ * CONTORNI PROTETTI: una linea scura sottile perderebbe la votazione e sparirebbe;
+ * per questo un colore scuro vince la cella se ne copre almeno un quarto,
+ * ma solo sopra un fondo chiaro (come una linea a matita su un foglio).
  * Restituisce un Uint8Array con l'indice del colore di ogni cella.
  */
+const OUTLINE_DARK = 90;    // luminosità sotto cui un colore è "scuro" (linea)
+const OUTLINE_LIGHT = 170;  // luminosità sopra cui il fondo è "chiaro"
+const OUTLINE_SHARE = 0.25; // parte della cella che la linea deve coprire
 export function majorityLabels(src, W, H, pal) {
   const { width: sw, height: sh, data: sd } = src;
   const labels = new Uint8Array(W * H);
   const votes = new Uint32Array(pal.length);
+  const dark = pal.map((c) => luma(c[0], c[1], c[2]) < OUTLINE_DARK);
+  const light = pal.map((c) => luma(c[0], c[1], c[2]) > OUTLINE_LIGHT);
   for (let y = 0; y < H; y++) {
     const y0 = Math.floor((y * sh) / H);
     const y1 = Math.max(y0 + 1, Math.floor(((y + 1) * sh) / H));
@@ -154,6 +194,12 @@ export function majorityLabels(src, W, H, pal) {
       }
       let best = 0;
       for (let j = 1; j < pal.length; j++) if (votes[j] > votes[best]) best = j;
+      if (light[best]) {
+        const min = OUTLINE_SHARE * (x1 - x0) * (y1 - y0);
+        let line = -1;
+        for (let j = 0; j < pal.length; j++) if (dark[j] && votes[j] >= min && (line < 0 || votes[j] > votes[line])) line = j;
+        if (line >= 0) best = line;
+      }
       labels[y * W + x] = best;
     }
   }
