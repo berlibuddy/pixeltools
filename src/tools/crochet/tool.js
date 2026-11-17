@@ -5,7 +5,7 @@
            solo la prima volta che il tool viene aperto
    - init: collega i comandi (riceve la <section> del tool)
    ============================================================= */
-   import { luma, toHex, boxSample, quantize } from '../../core/pixel-engine.js';
+   import { luma, toHex, boxSample, paletteFromImage, majorityLabels, simplify } from '../../core/pixel-engine.js';
    import { $, $$, h, clamp } from '../../core/dom.js';
    import { formatBytes, baseName, isImage, downloadBlob } from '../../core/files.js';
    import { fileToCanvas, canvasToBlob } from '../../core/images.js';
@@ -22,9 +22,11 @@
       -------------------------------------------------------------
       Il "motore pixel" (lo riuseremo per il tool Pixel Art):
       1. La foto viene ridotta a una griglia: 1 cella = 1 punto.
-         Ogni cella prende il colore MEDIO dei pixel che copre.
-      2. I colori vengono ridotti a N con il "k-means": si cercano N
-         colori rappresentativi e ogni cella prende il più vicino.
+         (Filet: ogni cella prende il colore MEDIO dei pixel che copre.)
+      2. I colori: si cercano N colori rappresentativi nella foto vera
+         (k-means); ogni cella prende il colore che occupa la parte più
+         grande della cella ("a maggioranza"), poi la pulizia
+         ("Semplifica") toglie i punti sparsi. Il Filet usa la media.
       3. Lo schema viene disegnato su un <canvas> con griglia, numeri
          e lettere; da lì si esporta in PNG o in PDF (pdf-lib).
       Tecniche:
@@ -40,6 +42,8 @@
      const rowsOut = $('#cr-rows');
      const colorsIn = $('#cr-colors');
      const colorsOut = $('#cr-colors-out');
+     const simplifyIn = $('#cr-simplify');
+     const simplifyOut = $('#cr-simplify-out');
      const threshIn = $('#cr-threshold');
      const threshOut = $('#cr-threshold-out');
      const invertIn = $('#cr-invert');
@@ -61,6 +65,7 @@
        sc: { label: 'Punto basso', hint: 'Il punto basso è più largo che alto: lo schema ha più righe, così il lavoro finito non esce schiacciato.' },
      };
      const LETTERS = 'ABCDEFGHIJKLMNOP'; // una lettera per colore (max 16)
+     const SIMPLIFY_NAMES = ['nessuna', 'poco', 'medio', 'tanto'];
      const MAX_ROWS = 400;
    
      /** Stato del tool */
@@ -71,7 +76,7 @@
        pattern: null,   // schema calcolato
      };
    
-     /* ---------- 9a. Calcoli (boxSample, quantize, luma, toHex: vedi src/core/pixel-engine.js) ---------- */
+     /* ---------- 9a. Calcoli (boxSample, paletteFromImage, majorityLabels, simplify, luma, toHex: vedi src/core/pixel-engine.js) ---------- */
      const gauge = () => ({
        st: clamp(Number(gaugeSt.value) || 20, 1, 100),
        rows: clamp(Number(gaugeRows.value) || 24, 1, 100),
@@ -96,11 +101,11 @@
      function buildPattern() {
        const { W, H } = gridSize();
        const n = W * H;
-       const px = boxSample(S.srcData, W, H).rgb;
        let colors;
        let labels;
    
        if (S.tech === 'filet') {
+         const px = boxSample(S.srcData, W, H).rgb;
          const t = Number(threshIn.value);
          labels = new Uint8Array(n);
          for (let i = 0; i < n; i++) {
@@ -109,9 +114,11 @@
          }
          colors = [{ rgb: [255, 255, 255], name: 'Vuoto' }, { rgb: [17, 17, 17], name: 'Pieno' }];
        } else {
-         const q = quantize(px, n, Number(colorsIn.value));
-         labels = q.labels;
-         colors = q.centers.map((c) => ({ rgb: c.map(Math.round) }));
+         // Colori presi dalla foto vera; ogni punto prende il colore "a maggioranza"
+         // della sua cella; poi la pulizia toglie i punti sparsi (cursore Semplifica)
+         const pal = paletteFromImage(S.srcData, Number(colorsIn.value));
+         labels = simplify(majorityLabels(S.srcData, W, H, pal), W, H, pal, Number(simplifyIn.value));
+         colors = pal.map((rgb) => ({ rgb }));
        }
    
        // Conta i punti per colore, ordina dal più usato e rinumera
@@ -278,6 +285,12 @@
      techHint.textContent = TECH.c2c.hint;
    
      colorsIn.addEventListener('input', () => { colorsOut.textContent = colorsIn.value; schedule(); });
+     simplifyIn.addEventListener('input', () => {
+       const name = SIMPLIFY_NAMES[Number(simplifyIn.value)];
+       simplifyOut.textContent = name;
+       simplifyIn.setAttribute('aria-valuetext', name); // lettori di schermo: "medio" invece di "2"
+       schedule();
+     });
      threshIn.addEventListener('input', () => { threshOut.textContent = threshIn.value; schedule(); });
      [widthIn, gaugeSt, gaugeRows].forEach((el) => el.addEventListener('input', schedule));
      invertIn.addEventListener('change', schedule);
