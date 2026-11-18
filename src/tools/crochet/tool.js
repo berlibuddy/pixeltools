@@ -5,7 +5,7 @@
            solo la prima volta che il tool viene aperto
    - init: collega i comandi (riceve la <section> del tool)
    ============================================================= */
-   import { luma, toHex, boxSample, paletteFromImage, majorityLabels, simplify } from '../../core/pixel-engine.js';
+   import { luma, toHex, boxSample, paletteFromImage, majorityLabels, simplify, patternStats, importantColors } from '../../core/pixel-engine.js';
    import { $, $$, h, clamp } from '../../core/dom.js';
    import { formatBytes, baseName, isImage, downloadBlob } from '../../core/files.js';
    import { fileToCanvas, canvasToBlob } from '../../core/images.js';
@@ -56,6 +56,13 @@
      const stageEmpty = $('.stage-empty', ws);
      const info = $('#cr-info');
      const legendEl = $('#cr-legend');
+     const diffBox = $('#cr-diff');
+     const diffVerdict = $('#cr-diff-verdict');
+     const diffList = $('#cr-diff-list');
+     const diffWarn = $('#cr-diff-warn');
+     const diffColors = $('#cr-diff-colors');
+     const diffColorsText = $('#cr-diff-colors-text');
+     const diffColorsBtn = $('#cr-diff-colors-btn');
      const pngBtn = $('#cr-png');
      const pdfBtn = $('#cr-pdf');
    
@@ -74,6 +81,7 @@
        fileName: '',
        tech: 'c2c',     // 'c2c' | 'filet' | 'sc'
        pattern: null,   // schema calcolato
+       important: 0,    // colori "importanti" della foto (per il consiglio "Usa N colori")
      };
    
      /* ---------- 9a. Calcoli (boxSample, paletteFromImage, majorityLabels, simplify, luma, toHex: vedi src/core/pixel-engine.js) ---------- */
@@ -255,6 +263,47 @@
        info.textContent = txt;
      }
    
+     /* Indicatore di difficoltà (non per il Filet: lì ci sono solo pieno e vuoto).
+        Soglie provate su foto di prova: disegno piatto = facile, bradipo = media,
+        foto vere (gatto, astronauta, caffè) = difficile.
+        - cambi di colore per riga, in proporzione alla larghezza: ≤ 8% facile, ≤ 15% media
+        - tapestry (punto basso): righe con più di 2 colori ≤ 10% facile, ≤ 35% media */
+     const VERDICTS = ['Facile', 'Media', 'Difficile'];
+     const num = (v) => v.toLocaleString('it-IT', { maximumFractionDigits: 1 });
+     function renderDifficulty(P) {
+       if (P.tech === 'filet') { diffBox.hidden = true; return; }
+       const st = patternStats(P.cells, P.W, P.H);
+       const share = st.changesAvg / P.W;
+       let level = share <= 0.08 ? 0 : share <= 0.15 ? 1 : 2;
+       const rows = [['Cambi di colore per riga', `in media ${num(st.changesAvg)} · al massimo ${st.changesMax}`]];
+       if (P.tech === 'sc') {
+         const over = st.rowsOver2 / P.H;
+         level = Math.max(level, over <= 0.10 ? 0 : over <= 0.35 ? 1 : 2);
+         rows.push(['Colori al massimo in una riga', st.colorsRowMax > 2 ? `${st.colorsRowMax} (meglio 2) · in ${st.rowsOver2} righe su ${P.H}` : String(st.colorsRowMax)]);
+       } else {
+         rows.push(['Bobine (zone di colore)', String(st.zones)]);
+       }
+       diffVerdict.textContent = VERDICTS[level];
+       diffVerdict.dataset.level = String(level);
+       diffList.replaceChildren(...rows.flatMap(([k, v]) => [h('dt', {}, k), h('dd', {}, v)]));
+       diffWarn.hidden = level < 2;
+       // "Questa foto ha N colori importanti": solo se non è già una foto difficile (lì servono MENO colori)
+       const chosen = Number(colorsIn.value);
+       const imp = S.important ?? 0;
+       const showColors = level < 2 && imp > chosen;
+       diffColors.hidden = !showColors;
+       if (showColors) {
+         diffColorsText.textContent = `Questa foto ha ${imp} colori importanti: con ${chosen} alcuni finiscono insieme.`;
+         diffColorsBtn.textContent = `Usa ${imp} colori`;
+         diffColorsBtn.dataset.colors = String(imp);
+       }
+       diffBox.hidden = false;
+     }
+     diffColorsBtn.addEventListener('click', () => {
+       colorsIn.value = diffColorsBtn.dataset.colors;
+       colorsIn.dispatchEvent(new Event('input', { bubbles: true }));
+     });
+
      /** Ricalcola tutto (chiamata quando cambia un'opzione) */
      function regenerate() {
        if (!S.srcData) { rowsOut.textContent = '—'; return; }
@@ -264,6 +313,7 @@
        renderPreview();
        renderLegend(S.pattern);
        renderInfo(S.pattern);
+       renderDifficulty(S.pattern);
        pngBtn.disabled = false;
        pdfBtn.disabled = false;
        if (size.capped) setStatus(status, `⚠ Altezza limitata a ${MAX_ROWS} righe: riduci la larghezza.`, 'warn');
@@ -305,6 +355,7 @@
          // max 800 px: più che sufficiente per uno schema da 200 punti, e veloce
          const c = await fileToCanvas(file, { maxSide: 800, background: '#ffffff' });
          S.srcData = c.getContext('2d').getImageData(0, 0, c.width, c.height);
+         S.important = importantColors(S.srcData);
          c.width = c.height = 0;
          S.fileName = file.name;
          fileLabel.textContent = `🖼 ${file.name} · ${formatBytes(file.size)}`;

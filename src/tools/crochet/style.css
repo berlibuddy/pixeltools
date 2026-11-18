@@ -52,3 +52,44 @@
   .legend-name { flex: 1; min-width: 0; display: flex; flex-direction: column; font-size: .9rem; }
   .legend-name small { font-size: .72rem; color: var(--muted); }
   .legend-count { font-size: .85rem; font-weight: 600; white-space: nowrap; }
+  /* Indicatore di difficoltà ("Quanto è difficile?") — bianco e nero come l'area di lavoro */
+  .cr-diff {
+    margin: 16px 0;
+    padding: 12px 14px;
+    background: var(--paper);
+    border: var(--border);
+    border-radius: var(--radius);
+  }
+  .cr-diff-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .cr-diff-head h3 { margin: 0; }
+  .cr-diff-verdict {
+    padding: 2px 10px;
+    font-size: .85rem;
+    font-weight: 700;
+    border: var(--border);
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+  }
+  .cr-diff-verdict[data-level="1"] { background: #e8e8e8; }
+  .cr-diff-verdict[data-level="2"] { background: var(--ink); color: #fff; }
+  .cr-diff-list {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4px 12px;
+    margin: 10px 0 0;
+    font-size: .9rem;
+  }
+  .cr-diff-list dt { color: var(--muted); }
+  .cr-diff-list dd { margin: 0; font-weight: 600; text-align: right; }
+  .cr-diff-tip {
+    margin: 10px 0 0;
+    padding-top: 10px;
+    border-top: 1.5px dashed #c4c4c4;
+    font-size: .9rem;
+  }
+  #cr-diff-colors:not([hidden]) { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+  /* Telefono stretto: il numero va sotto la sua etichetta */
+  @media (max-width: 420px) {
+    .cr-diff-list { grid-template-columns: 1fr; gap: 0; }
+    .cr-diff-list dd { text-align: left; margin-bottom: 6px; }
+  }

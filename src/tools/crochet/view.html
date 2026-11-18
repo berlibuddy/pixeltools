@@ -88,6 +88,18 @@
           <p class="stage-empty">Carica una foto per vedere qui lo schema.</p>
           <canvas id="cr-canvas" hidden aria-label="Schema per uncinetto"></canvas>
         </div>
+        <section class="cr-diff" id="cr-diff" hidden aria-labelledby="cr-diff-title">
+          <div class="cr-diff-head">
+            <h3 id="cr-diff-title">Quanto è difficile?</h3>
+            <span class="cr-diff-verdict" id="cr-diff-verdict"></span>
+          </div>
+          <dl class="cr-diff-list" id="cr-diff-list"></dl>
+          <p class="cr-diff-tip" id="cr-diff-warn" hidden>Questa foto ha troppi colori e dettagli per venire fedele all'uncinetto. Prova a ritagliarla vicino al soggetto, con uno sfondo semplice, oppure alza «Semplifica» o usa meno colori.</p>
+          <p class="cr-diff-tip" id="cr-diff-colors" hidden>
+            <span id="cr-diff-colors-text"></span>
+            <button class="btn btn-small" type="button" id="cr-diff-colors-btn"></button>
+          </p>
+        </section>
         <h3 class="cr-legend-title">Legenda filati</h3>
         <ul class="cr-legend" id="cr-legend" data-empty="La legenda apparirà qui."></ul>
         <p class="hint">Le righe si contano dal basso (riga 1). Linee grigie ogni 5 punti, linee nere ogni 10.</p>

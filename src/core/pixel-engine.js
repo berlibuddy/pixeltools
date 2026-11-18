@@ -10,6 +10,7 @@
    - paletteFromImage, majorityLabels: colori presi dalla foto vera
                    e celle "a maggioranza" (Uncinetto)
    - simplify:     pulizia dei punti sparsi ("Semplifica")
+   - patternStats, importantColors: numeri per l'indicatore di difficoltà
    - colorDist, luma, toHex, parseHex: piccoli aiuti sui colori
    ============================================================= */
 
@@ -269,4 +270,62 @@ export function simplify(cells, W, H, pal, level) {
     if (!changed) break;
   }
   return out;
+}
+
+/**
+ * Numeri di uno schema, per l'indicatore di difficoltà dell'Uncinetto.
+ * - changesAvg / changesMax: cambi di colore per riga (media e massimo)
+ * - colorsRowMax: colori al massimo nella stessa riga (tapestry: meglio 2)
+ * - rowsOver2: righe con più di 2 colori
+ * - zones: zone di colore separate (lati che si toccano) = bobine/gomitoli nel C2C
+ */
+export function patternStats(cells, W, H) {
+  let total = 0, changesMax = 0, colorsRowMax = 0, rowsOver2 = 0;
+  for (let y = 0; y < H; y++) {
+    const row = new Set();
+    let ch = 0;
+    for (let x = 0; x < W; x++) {
+      const c = cells[y * W + x];
+      row.add(c);
+      if (x > 0 && c !== cells[y * W + x - 1]) ch++;
+    }
+    total += ch;
+    if (ch > changesMax) changesMax = ch;
+    if (row.size > colorsRowMax) colorsRowMax = row.size;
+    if (row.size > 2) rowsOver2++;
+  }
+  const seen = new Uint8Array(W * H);
+  let zones = 0;
+  for (let s = 0; s < W * H; s++) {
+    if (seen[s]) continue;
+    zones++;
+    seen[s] = 1;
+    const stack = [s];
+    while (stack.length) {
+      const i = stack.pop(), x = i % W;
+      for (const j of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i - W, i + W]) {
+        if (j >= 0 && j < W * H && !seen[j] && cells[j] === cells[i]) { seen[j] = 1; stack.push(j); }
+      }
+    }
+  }
+  return { changesAvg: total / H, changesMax, colorsRowMax, rowsOver2, zones };
+}
+
+/**
+ * Quanti colori "importanti" ha una foto: si cercano 8 colori, si tengono quelli
+ * che coprono almeno l'1,5% della foto e si uniscono quelli quasi uguali.
+ * Serve al consiglio "questa foto ha 6 colori importanti, ne hai scelti 4".
+ */
+export function importantColors(src) {
+  const pal = paletteFromImage(src, 8);
+  const W = 80, H = Math.max(1, Math.round((80 * src.height) / src.width));
+  const labels = majorityLabels(src, W, H, pal);
+  const count = new Array(pal.length).fill(0);
+  for (const l of labels) count[l]++;
+  const big = pal.map((p, i) => ({ p, share: count[i] / (W * H) }))
+    .filter((o) => o.share >= 0.015)
+    .sort((a, b) => b.share - a.share);
+  const kept = [];
+  for (const o of big) if (!kept.some((k) => colorDist(k[0], k[1], k[2], o.p[0], o.p[1], o.p[2]) < 1200)) kept.push(o.p);
+  return kept.length;
 }
