@@ -11,6 +11,7 @@
                    e celle "a maggioranza" (Uncinetto)
    - simplify:     pulizia dei punti sparsi ("Semplifica")
    - patternStats, importantColors: numeri per l'indicatore di difficoltà
+   - stylize, keepOutlines: la foto "a macchie" per gli stili dell'Uncinetto
    - colorDist, luma, toHex, parseHex: piccoli aiuti sui colori
    ============================================================= */
 
@@ -328,4 +329,74 @@ export function importantColors(src) {
   const kept = [];
   for (const o of big) if (!kept.some((k) => colorDist(k[0], k[1], k[2], o.p[0], o.p[1], o.p[2]) < 1200)) kept.push(o.p);
   return kept.length;
+}
+
+/**
+ * "Stilizza" (Uncinetto): la foto diventa a macchie, come un poster o un adesivo.
+ * Filtro di Kuwahara: per ogni pixel guarda i 4 quadrati intorno e prende il colore
+ * medio di quello più uniforme → le sfumature si lisciano, i bordi restano netti.
+ * Lavora su una copia piccola (lato max 256 px): pochi centesimi di secondo anche sul telefono.
+ * strength: 0 nessuna · 1 leggera · 2 media · 3 forte. Restituisce un oggetto come ImageData.
+ */
+const STYLIZE_RADIUS = [0, 2, 3, 4];
+const STYLIZE_PASSES = [0, 1, 2, 3];
+export function stylize(src, strength) {
+  if (!strength) return src;
+  const s = Math.min(1, 256 / Math.max(src.width, src.height));
+  const w = Math.max(1, Math.round(src.width * s));
+  const h = Math.max(1, Math.round(src.height * s));
+  const { rgb } = boxSample(src, w, h);
+  let img = { width: w, height: h, data: new Uint8ClampedArray(w * h * 4) };
+  for (let i = 0; i < w * h; i++) {
+    img.data[i * 4] = rgb[i * 3]; img.data[i * 4 + 1] = rgb[i * 3 + 1]; img.data[i * 4 + 2] = rgb[i * 3 + 2]; img.data[i * 4 + 3] = 255;
+  }
+  for (let p = 0; p < STYLIZE_PASSES[strength]; p++) img = kuwahara(img, STYLIZE_RADIUS[strength]);
+  return img;
+}
+
+function kuwahara(img, r) {
+  const { width: w, height: h, data: d } = img;
+  // Somme cumulate di r, g, b, luminosità e luminosità² → media e varianza di ogni quadrato in un colpo solo
+  const W1 = w + 1, N = W1 * (h + 1);
+  const S = [0, 1, 2, 3, 4].map(() => new Float64Array(N));
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 4, l = luma(d[i], d[i + 1], d[i + 2]);
+      const v = [d[i], d[i + 1], d[i + 2], l, l * l], k = (y + 1) * W1 + x + 1;
+      for (let c = 0; c < 5; c++) S[c][k] = v[c] + S[c][k - 1] + S[c][k - W1] - S[c][k - W1 - 1];
+    }
+  }
+  const box = (c, x0, y0, x1, y1) => S[c][(y1 + 1) * W1 + x1 + 1] - S[c][y0 * W1 + x1 + 1] - S[c][(y1 + 1) * W1 + x0] + S[c][y0 * W1 + x0];
+  const out = new Uint8ClampedArray(d.length);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      let best = Infinity, q = null;
+      for (const [ax, ay] of [[-1, -1], [0, -1], [-1, 0], [0, 0]]) {
+        const x0 = Math.max(0, x + ax * r), y0 = Math.max(0, y + ay * r);
+        const x1 = Math.min(w - 1, x0 + r), y1 = Math.min(h - 1, y0 + r);
+        const n = (x1 - x0 + 1) * (y1 - y0 + 1), m = box(3, x0, y0, x1, y1) / n;
+        const v = box(4, x0, y0, x1, y1) / n - m * m;
+        if (v < best) { best = v; q = [x0, y0, x1, y1, n]; }
+      }
+      const i = (y * w + x) * 4;
+      out[i] = box(0, q[0], q[1], q[2], q[3]) / q[4];
+      out[i + 1] = box(1, q[0], q[1], q[2], q[3]) / q[4];
+      out[i + 2] = box(2, q[0], q[1], q[2], q[3]) / q[4];
+      out[i + 3] = 255;
+    }
+  }
+  return { width: w, height: h, data: out };
+}
+
+/**
+ * Dopo "Stilizza": i contorni scuri sottili della foto originale tornano sopra le macchie
+ * (il filtro li lisciava via: il bradipo perdeva la testa). Stessa regola dei contorni
+ * protetti: colore scuro dall'originale sopra un colore chiaro delle macchie.
+ * styled, original: indici colore della stessa palette. Restituisce un nuovo Uint8Array.
+ */
+export function keepOutlines(styled, original, pal) {
+  const L = pal.map((c) => luma(c[0], c[1], c[2]));
+  const out = Uint8Array.from(styled);
+  for (let i = 0; i < out.length; i++) if (L[original[i]] < OUTLINE_DARK && L[out[i]] > OUTLINE_LIGHT) out[i] = original[i];
+  return out;
 }

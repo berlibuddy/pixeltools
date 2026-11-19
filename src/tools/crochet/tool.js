@@ -5,7 +5,7 @@
            solo la prima volta che il tool viene aperto
    - init: collega i comandi (riceve la <section> del tool)
    ============================================================= */
-   import { luma, toHex, boxSample, paletteFromImage, majorityLabels, simplify, patternStats, importantColors } from '../../core/pixel-engine.js';
+   import { luma, toHex, boxSample, paletteFromImage, majorityLabels, simplify, patternStats, importantColors, stylize, keepOutlines } from '../../core/pixel-engine.js';
    import { $, $$, h, clamp } from '../../core/dom.js';
    import { formatBytes, baseName, isImage, downloadBlob } from '../../core/files.js';
    import { fileToCanvas, canvasToBlob } from '../../core/images.js';
@@ -44,6 +44,9 @@
      const colorsOut = $('#cr-colors-out');
      const simplifyIn = $('#cr-simplify');
      const simplifyOut = $('#cr-simplify-out');
+     const stylizeIn = $('#cr-stylize');
+     const stylizeOut = $('#cr-stylize-out');
+     const styleHint = $('#cr-style-hint');
      const threshIn = $('#cr-threshold');
      const threshOut = $('#cr-threshold-out');
      const invertIn = $('#cr-invert');
@@ -73,6 +76,13 @@
      };
      const LETTERS = 'ABCDEFGHIJKLMNOP'; // una lettera per colore (max 16)
      const SIMPLIFY_NAMES = ['nessuna', 'poco', 'medio', 'tanto'];
+     const STYLIZE_NAMES = ['nessuna', 'leggera', 'media', 'forte'];
+     /* Stili: ognuno imposta colori, stilizza e semplifica (provati su disegni e foto il 18/11) */
+     const STYLES = {
+       sagoma: { colors: 2, stylize: 3, simplify: 3, hint: 'Due colori: la forma pulita del soggetto. Funziona quando il soggetto si stacca bene dallo sfondo.' },
+       semplice: { colors: 4, stylize: 2, simplify: 3, hint: 'Macchie grandi e pochi colori: il più facile da lavorare.' },
+       dettagliato: { colors: 6, stylize: 1, simplify: 1, hint: 'Più colori e più dettagli, ma più cambi di colore.' },
+     };
      const MAX_ROWS = 400;
    
      /** Stato del tool */
@@ -82,6 +92,7 @@
        tech: 'c2c',     // 'c2c' | 'filet' | 'sc'
        pattern: null,   // schema calcolato
        important: 0,    // colori "importanti" della foto (per il consiglio "Usa N colori")
+       styled: [],      // foto stilizzate, una per forza (si ricalcolano solo con una foto nuova)
      };
    
      /* ---------- 9a. Calcoli (boxSample, paletteFromImage, majorityLabels, simplify, luma, toHex: vedi src/core/pixel-engine.js) ---------- */
@@ -124,8 +135,15 @@
        } else {
          // Colori presi dalla foto vera; ogni punto prende il colore "a maggioranza"
          // della sua cella; poi la pulizia toglie i punti sparsi (cursore Semplifica)
+         // Con "Stilizza" le macchie vengono dalla foto stilizzata e i contorni scuri dall'originale
          const pal = paletteFromImage(S.srcData, Number(colorsIn.value));
-         labels = simplify(majorityLabels(S.srcData, W, H, pal), W, H, pal, Number(simplifyIn.value));
+         const st = Number(stylizeIn.value);
+         let base = majorityLabels(S.srcData, W, H, pal);
+         if (st > 0) {
+           S.styled[st] ??= stylize(S.srcData, st);
+           base = keepOutlines(majorityLabels(S.styled[st], W, H, pal), base, pal);
+         }
+         labels = simplify(base, W, H, pal, Number(simplifyIn.value));
          colors = pal.map((rgb) => ({ rgb }));
        }
    
@@ -290,7 +308,9 @@
        // "Questa foto ha N colori importanti": solo se non è già una foto difficile (lì servono MENO colori)
        const chosen = Number(colorsIn.value);
        const imp = S.important ?? 0;
-       const showColors = level < 2 && imp > chosen;
+       // …e non con lo stile "Sagoma": lì i 2 colori sono una scelta voluta
+       const sagoma = ws.querySelector('input[name="cr-style"]:checked')?.value === 'sagoma';
+       const showColors = level < 2 && imp > chosen && !sagoma;
        diffColors.hidden = !showColors;
        if (showColors) {
          diffColorsText.textContent = `Questa foto ha ${imp} colori importanti: con ${chosen} alcuni finiscono insieme.`;
@@ -334,13 +354,34 @@
      });
      techHint.textContent = TECH.c2c.hint;
    
-     colorsIn.addEventListener('input', () => { colorsOut.textContent = colorsIn.value; schedule(); });
-     simplifyIn.addEventListener('input', () => {
-       const name = SIMPLIFY_NAMES[Number(simplifyIn.value)];
-       simplifyOut.textContent = name;
-       simplifyIn.setAttribute('aria-valuetext', name); // lettori di schermo: "medio" invece di "2"
+     colorsIn.addEventListener('input', () => { syncOutputs(); syncStyle(); schedule(); });
+     /** Scrive le etichette dei cursori (es. "medio" invece di "2", anche per i lettori di schermo) */
+     function syncOutputs() {
+       colorsOut.textContent = colorsIn.value;
+       for (const [inp, out, names] of [[simplifyIn, simplifyOut, SIMPLIFY_NAMES], [stylizeIn, stylizeOut, STYLIZE_NAMES]]) {
+         const name = names[Number(inp.value)];
+         out.textContent = name;
+         inp.setAttribute('aria-valuetext', name);
+       }
+     }
+     /** Se i cursori corrispondono a uno stile lo segna, altrimenti nessuno ("impostazioni tue") */
+     function syncStyle() {
+       const v = { colors: Number(colorsIn.value), stylize: Number(stylizeIn.value), simplify: Number(simplifyIn.value) };
+       let found = null;
+       for (const [id, p] of Object.entries(STYLES)) if (p.colors === v.colors && p.stylize === v.stylize && p.simplify === v.simplify) found = id;
+       ws.querySelectorAll('input[name="cr-style"]').forEach((r) => { r.checked = r.value === found; });
+       styleHint.textContent = found ? STYLES[found].hint : 'Impostazioni scelte da te con i cursori qui sotto.';
+     }
+     ws.querySelectorAll('input[name="cr-style"]').forEach((r) => r.addEventListener('change', () => {
+       const p = STYLES[r.value];
+       colorsIn.value = p.colors;
+       stylizeIn.value = p.stylize;
+       simplifyIn.value = p.simplify;
+       syncOutputs();
+       styleHint.textContent = p.hint;
        schedule();
-     });
+     }));
+     for (const inp of [simplifyIn, stylizeIn]) inp.addEventListener('input', () => { syncOutputs(); syncStyle(); schedule(); });
      threshIn.addEventListener('input', () => { threshOut.textContent = threshIn.value; schedule(); });
      [widthIn, gaugeSt, gaugeRows].forEach((el) => el.addEventListener('input', schedule));
      invertIn.addEventListener('change', schedule);
@@ -356,6 +397,7 @@
          const c = await fileToCanvas(file, { maxSide: 800, background: '#ffffff' });
          S.srcData = c.getContext('2d').getImageData(0, 0, c.width, c.height);
          S.important = importantColors(S.srcData);
+         S.styled = [];
          c.width = c.height = 0;
          S.fileName = file.name;
          fileLabel.textContent = `🖼 ${file.name} · ${formatBytes(file.size)}`;

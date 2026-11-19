@@ -36,15 +36,27 @@
           </div>
         </div>
 
-        <!-- C2C e punto basso: numero di colori -->
+        <!-- C2C e punto basso: stile, numero di colori, pulizia -->
         <div class="tech-panel" data-show="c2c sc">
+          <div class="field">
+            <span id="cr-style-label">Stile</span>
+            <div class="segmented" role="radiogroup" aria-labelledby="cr-style-label">
+              <label><input type="radio" name="cr-style" value="sagoma"><span>Sagoma</span></label>
+              <label><input type="radio" name="cr-style" value="semplice" checked><span>Semplice</span></label>
+              <label><input type="radio" name="cr-style" value="dettagliato"><span>Dettagliato</span></label>
+            </div>
+          </div>
+          <p class="hint" id="cr-style-hint">Macchie grandi e pochi colori: il più facile da lavorare.</p>
           <label class="field">Numero di colori: <output id="cr-colors-out">4</output>
             <input type="range" id="cr-colors" min="2" max="16" value="4">
           </label>
-          <label class="field">Semplifica: <output id="cr-simplify-out">medio</output>
-            <input type="range" id="cr-simplify" min="0" max="3" step="1" value="2" aria-valuetext="medio">
+          <label class="field">Stilizza: <output id="cr-stylize-out">media</output>
+            <input type="range" id="cr-stylize" min="0" max="3" step="1" value="2" aria-valuetext="media">
           </label>
-          <p class="hint">Toglie i punti rimasti da soli e i gruppetti piccoli: meno cambi di colore. Le linee sottili, anche in diagonale, restano.</p>
+          <label class="field">Semplifica: <output id="cr-simplify-out">tanto</output>
+            <input type="range" id="cr-simplify" min="0" max="3" step="1" value="3" aria-valuetext="tanto">
+          </label>
+          <p class="hint">Stilizza: la foto diventa a macchie, i contorni scuri restano. Semplifica: toglie i punti rimasti da soli e i gruppetti piccoli.</p>
         </div>
 
         <!-- Filet: soglia chiaro/scuro -->
@@ -94,7 +106,7 @@
             <span class="cr-diff-verdict" id="cr-diff-verdict"></span>
           </div>
           <dl class="cr-diff-list" id="cr-diff-list"></dl>
-          <p class="cr-diff-tip" id="cr-diff-warn" hidden>Questa foto ha troppi colori e dettagli per venire fedele all'uncinetto. Prova a ritagliarla vicino al soggetto, con uno sfondo semplice, oppure alza «Semplifica» o usa meno colori.</p>
+          <p class="cr-diff-tip" id="cr-diff-warn" hidden>Questa foto ha troppi colori e dettagli per venire fedele all'uncinetto. Prova a ritagliarla vicino al soggetto, con uno sfondo semplice, oppure prova lo stile «Sagoma», usa meno colori o più punti.</p>
           <p class="cr-diff-tip" id="cr-diff-colors" hidden>
             <span id="cr-diff-colors-text"></span>
             <button class="btn btn-small" type="button" id="cr-diff-colors-btn"></button>
