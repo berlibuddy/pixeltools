@@ -134,3 +134,10 @@
   /* Disegnando, il dito sullo schema colora invece di scorrere la pagina; con "Sposta" scorre */
   .cr-stage.is-editing #cr-canvas { touch-action: none; cursor: crosshair; }
   .cr-stage.is-editing.is-moving #cr-canvas { touch-action: auto; cursor: grab; }
+  .cr-editlabel { margin-bottom: -4px; font-size: .875rem; font-weight: 500; }
+  /* Annulla · Ripeti · − · + sempre su una riga; sui telefoni stretti solo le frecce */
+  .cr-history { display: grid; grid-template-columns: auto auto 44px 44px; justify-content: start; }
+  @media (max-width: 380px) {
+    .cr-history { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .cr-narrow-hide { display: none; }
+  }

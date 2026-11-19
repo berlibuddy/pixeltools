@@ -102,7 +102,7 @@ export const TOOLS = [
     id: 'crochet',
     name: 'Foto in Uncinetto',
     title: 'Foto in Uncinetto',
-    desc: 'Trasforma una foto in uno schema per uncinetto: C2C, filet o punto basso.',
+    desc: 'Trasforma una foto in un disegno da realizzare all\'uncinetto: C2C, filet o punto basso.',
     section: 'pixel',
     accent: 'var(--c-crochet)',
     icon: `

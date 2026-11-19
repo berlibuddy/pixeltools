@@ -12,6 +12,13 @@ import { $, h } from '../../core/dom.js';
 import { luma, toHex, parseHex } from '../../core/pixel-engine.js';
 
 const HISTORY_MAX = 100;
+/* Una frase per strumento: si legge solo quella che serve (più facile da capire) */
+const TOOL_HINTS = {
+  pencil: 'Matita: tocca o trascina sui quadretti per colorarli con il colore scelto qui sotto.',
+  fill: 'Riempi: tocca un quadretto e tutta la sua zona prende il colore scelto.',
+  pick: 'Prendi: tocca un quadretto per usare il suo colore (poi torni alla matita).',
+  move: 'Sposta: trascina per scorrere lo schema senza colorare. Per disegnare torna a «Matita».',
+};
 
 /** Ricalcola i punti di ogni colore */
 export function recount(P) {
@@ -73,6 +80,7 @@ export function createEditor(ws, opts) {
   const colorAdd = $('#cr-color-add');
   const colorEditLabel = $('#cr-color-edit-label');
   const colorAddLabel = $('#cr-color-add-label');
+  const toolHint = $('#cr-tool-hint');
 
   const E = { on: false, tool: 'pencil', active: 0, undo: [], redo: [], pending: null, drawing: false, last: null, frame: 0 };
 
@@ -168,6 +176,7 @@ export function createEditor(ws, opts) {
     E.tool = t;
     ws.querySelectorAll('input[name="cr-tool"]').forEach((r) => { r.checked = r.value === t; });
     stage.classList.toggle('is-moving', t === 'move');
+    toolHint.textContent = TOOL_HINTS[t];
   }
   ws.querySelectorAll('input[name="cr-tool"]').forEach((r) => r.addEventListener('change', () => setTool(r.value)));
   undoBtn.addEventListener('click', () => step(E.undo, E.redo));

@@ -4,7 +4,7 @@
       <a class="btn btn-small ws-back" href="#">Tutti gli strumenti</a>
       <div>
         <h2 tabindex="-1">Foto in Uncinetto</h2>
-        <p>Carica una foto, scegli tecnica, dimensione e colori: lo schema si aggiorna da solo.</p>
+        <p>Trasforma una foto in un disegno da realizzare davvero all'uncinetto: scegli quanto semplice, poi ritocca a mano o disegna da zero.</p>
       </div>
     </header>
 
@@ -22,6 +22,7 @@
           <span>una foto JPG, PNG o WebP</span>
         </label>
         <p class="file-pill" id="cr-filename" hidden></p>
+        <p class="hint">Non è una copia fedele della foto: è uno schema pensato per essere lavorato, con pochi colori e forme chiare.</p>
         <button class="btn btn-small cr-blank-open" type="button" id="cr-blank-open" aria-expanded="false" aria-controls="cr-blank">oppure disegna su un foglio vuoto</button>
         <div class="cr-blank" id="cr-blank" hidden>
           <div class="field-row">
@@ -119,18 +120,19 @@
             <label><input type="radio" name="cr-tool" value="pick"><span>Prendi</span></label>
             <label><input type="radio" name="cr-tool" value="move"><span>Sposta</span></label>
           </div>
-          <div class="cr-editrow">
-            <button class="btn btn-small" type="button" id="cr-undo" disabled>↶ Annulla</button>
-            <button class="btn btn-small" type="button" id="cr-redo" disabled>↷ Ripeti</button>
+          <p class="hint" id="cr-tool-hint" aria-live="polite"></p>
+          <div class="cr-editrow cr-history">
+            <button class="btn btn-small" type="button" id="cr-undo" aria-label="Annulla" disabled><span>↶<span class="cr-narrow-hide"> Annulla</span></span></button>
+            <button class="btn btn-small" type="button" id="cr-redo" aria-label="Ripeti" disabled><span>↷<span class="cr-narrow-hide"> Ripeti</span></span></button>
             <button class="btn btn-small cr-zoom" type="button" id="cr-zoom-out" aria-label="Rimpicciolisci lo schema">−</button>
             <button class="btn btn-small cr-zoom" type="button" id="cr-zoom-in" aria-label="Ingrandisci lo schema">+</button>
           </div>
-          <div class="cr-palette" id="cr-palette" role="radiogroup" aria-label="Colore per disegnare"></div>
+          <span class="cr-editlabel" id="cr-palette-label">Colore per disegnare</span>
+          <div class="cr-palette" id="cr-palette" role="radiogroup" aria-labelledby="cr-palette-label"></div>
           <div class="cr-editrow">
             <label class="btn btn-small" id="cr-color-edit-label">Cambia colore<input type="color" id="cr-color-edit" class="sr-only"></label>
             <label class="btn btn-small" id="cr-color-add-label">+ Nuovo colore<input type="color" id="cr-color-add" class="sr-only" value="#5bb8ff"></label>
           </div>
-          <p class="hint">Matita: tocca o trascina sui quadretti. Riempi: colora tutta una zona. Prendi: prende il colore di un quadretto. Sposta: scorri lo schema senza disegnare (sul telefono serve per muoversi nello schema ingrandito).</p>
         </div>
         <div class="stage cr-stage">
           <p class="stage-empty">Carica una foto per vedere qui lo schema.</p>
