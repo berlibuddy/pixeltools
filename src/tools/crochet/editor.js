@@ -2,7 +2,9 @@
    PixelTools — src/tools/crochet/editor.js
    EDITOR DELLO SCHEMA (Uncinetto): ritocco a mano e disegno su foglio vuoto.
    Funziona col mouse e col dito (Pointer Events: un solo codice per entrambi).
-   - Strumenti: Matita · Riempi (secchiello) · Prendi (contagocce) · Sposta
+   - Strumenti: Matita · Gomma (rimette lo sfondo) · Riempi (secchiello) · Prendi (contagocce)
+   - Sul telefono: un dito disegna, DUE dita spostano lo schema e pizzicando lo ingrandiscono
+     (come nelle app di disegno). Se il primo dito aveva già colorato, torna tutto com'era.
    - Annulla / Ripeti (anche Ctrl+Z, Ctrl+Y, Ctrl+Maiusc+Z), zoom − / +
    - Colori: tocchi un quadratino per sceglierlo, "Cambia colore", "+ Nuovo colore"
    Lo schema (P) è lo stesso oggetto che usano anteprima, legenda, PNG e PDF:
@@ -14,10 +16,10 @@ import { luma, toHex, parseHex } from '../../core/pixel-engine.js';
 const HISTORY_MAX = 100;
 /* Una frase per strumento: si legge solo quella che serve (più facile da capire) */
 const TOOL_HINTS = {
-  pencil: 'Matita: tocca o trascina sui quadretti per colorarli con il colore scelto qui sotto.',
-  fill: 'Riempi: tocca un quadretto e tutta la sua zona prende il colore scelto.',
-  pick: 'Prendi: tocca un quadretto per usare il suo colore (poi torni alla matita).',
-  move: 'Sposta: trascina per scorrere lo schema senza colorare. Per disegnare torna a «Matita».',
+  pencil: () => 'Matita: tocca o trascina sui quadretti per colorarli con il colore scelto qui sotto.',
+  eraser: (bg) => `Gomma: tocca o trascina per rimettere il colore dello sfondo (${bg}).`,
+  fill: () => 'Riempi: tocca un quadretto e tutta la sua zona prende il colore scelto.',
+  pick: () => 'Prendi: tocca un quadretto per usare il suo colore (poi torni alla matita).',
 };
 
 /** Ricalcola i punti di ogni colore */
@@ -82,7 +84,7 @@ export function createEditor(ws, opts) {
   const colorAddLabel = $('#cr-color-add-label');
   const toolHint = $('#cr-tool-hint');
 
-  const E = { on: false, tool: 'pencil', active: 0, undo: [], redo: [], pending: null, drawing: false, last: null, frame: 0 };
+  const E = { on: false, tool: 'pencil', active: 0, bg: 0, undo: [], redo: [], pending: null, drawing: false, last: null, frame: 0 };
 
   const snapshot = (P) => ({ cells: Uint8Array.from(P.cells), palette: P.palette.map((c) => ({ ...c })) });
   const restore = (P, s) => { P.cells = Uint8Array.from(s.cells); P.palette = s.palette.map((c) => ({ ...c })); };
@@ -175,8 +177,7 @@ export function createEditor(ws, opts) {
   function setTool(t) {
     E.tool = t;
     ws.querySelectorAll('input[name="cr-tool"]').forEach((r) => { r.checked = r.value === t; });
-    stage.classList.toggle('is-moving', t === 'move');
-    toolHint.textContent = TOOL_HINTS[t];
+    toolHint.textContent = TOOL_HINTS[t](getPattern()?.palette[E.bg]?.letter ?? 'A');
   }
   ws.querySelectorAll('input[name="cr-tool"]').forEach((r) => r.addEventListener('change', () => setTool(r.value)));
   undoBtn.addEventListener('click', () => step(E.undo, E.redo));
@@ -197,34 +198,68 @@ export function createEditor(ws, opts) {
   const drawSoon = () => { if (!E.frame) E.frame = requestAnimationFrame(() => { E.frame = 0; redraw(); }); };
   function paint([x, y]) {
     const P = getPattern();
-    P.cells[y * P.W + x] = E.active;
+    P.cells[y * P.W + x] = E.tool === 'eraser' ? E.bg : E.active;
+  }
+
+  /* Dita sullo schema (solo touch): con due dita si sposta e si ingrandisce */
+  const touches = new Map(); // pointerId → posizione
+  let gesture = null;        // { lastMid, startDist, scale, ending }
+  let tap = null;            // Riempi e Prendi agiscono quando il dito si alza (così due dita non li attivano)
+  function fingers() {
+    const [a, b] = [...touches.values()];
+    return { mid: [(a.x + b.x) / 2, (a.y + b.y) / 2], dist: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)) };
+  }
+  function startGesture() {
+    if (E.drawing) { // il primo dito aveva già colorato: torna com'era, niente storia
+      restore(getPattern(), E.pending);
+      E.pending = null;
+      E.drawing = false;
+      redraw();
+    }
+    tap = null;
+    const f = fingers();
+    const rect = canvas.getBoundingClientRect();
+    canvas.style.transformOrigin = `${f.mid[0] - rect.left}px ${f.mid[1] - rect.top}px`;
+    gesture = { lastMid: f.mid, startDist: f.dist, scale: 1, ending: false };
+  }
+  function moveGesture() {
+    const f = fingers();
+    const dx = f.mid[0] - gesture.lastMid[0], dy = f.mid[1] - gesture.lastMid[1];
+    gesture.lastMid = f.mid;
+    stage.scrollLeft -= dx;
+    const top = stage.scrollTop;
+    stage.scrollTop -= dy;
+    if (stage.scrollTop === top) window.scrollBy(0, -dy); // lo schema non scorre in verticale: scorre la pagina
+    gesture.scale = Math.min(4, Math.max(0.25, f.dist / gesture.startDist));
+    canvas.style.transform = `scale(${gesture.scale})`; // anteprima veloce; il ridisegno vero alla fine
+  }
+  function endGesture() {
+    canvas.style.transform = '';
+    if (Math.abs(gesture.scale - 1) > 0.08) zoomBy(gesture.scale);
+    gesture.ending = true; // il dito rimasto giù non deve disegnare
   }
 
   canvas.addEventListener('pointerdown', (e) => {
-    if (!E.on || E.tool === 'move' || e.button > 0) return;
+    if (!E.on || e.button > 0) return;
+    if (e.pointerType === 'touch') {
+      touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (touches.size === 2 && !gesture) { e.preventDefault(); startGesture(); return; }
+      if (touches.size > 1 || gesture) return;
+    }
     const c = cellAt(e);
     if (!c) return;
     e.preventDefault();
-    const P = getPattern();
-    if (E.tool === 'pick') { // prendi il colore e torna alla matita
-      E.active = P.cells[c[1] * P.W + c[0]];
-      renderPalette();
-      setTool('pencil');
-      return;
-    }
-    begin();
-    if (E.tool === 'fill') {
-      floodFill(P.cells, P.W, P.H, c[1] * P.W + c[0], E.active);
-      end();
-      return;
-    }
     canvas.setPointerCapture(e.pointerId);
+    if (E.tool === 'fill' || E.tool === 'pick') { tap = { id: e.pointerId, cell: c }; return; }
+    begin();
     E.drawing = true;
     E.last = c;
     paint(c);
     drawSoon();
   });
   canvas.addEventListener('pointermove', (e) => {
+    if (touches.has(e.pointerId)) touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (gesture) { if (!gesture.ending && touches.size === 2) moveGesture(); return; }
     if (!E.drawing) return;
     const c = cellAt(e);
     if (!c) return;
@@ -232,9 +267,35 @@ export function createEditor(ws, opts) {
     E.last = c;
     drawSoon();
   });
-  const stop = () => { if (!E.drawing) return; E.drawing = false; end(); };
-  canvas.addEventListener('pointerup', stop);
-  canvas.addEventListener('pointercancel', stop);
+  function release(e) {
+    touches.delete(e.pointerId);
+    if (gesture) {
+      if (!gesture.ending) endGesture();
+      if (!touches.size) gesture = null;
+      return;
+    }
+    if (tap && tap.id === e.pointerId) {
+      const { cell } = tap;
+      tap = null;
+      if (e.type !== 'pointerup') return;
+      const P = getPattern();
+      if (E.tool === 'pick') { // prendi il colore e torna alla matita
+        E.active = P.cells[cell[1] * P.W + cell[0]];
+        renderPalette();
+        setTool('pencil');
+        return;
+      }
+      begin();
+      floodFill(P.cells, P.W, P.H, cell[1] * P.W + cell[0], E.active);
+      end();
+      return;
+    }
+    if (!E.drawing) return;
+    E.drawing = false;
+    end();
+  }
+  canvas.addEventListener('pointerup', release);
+  canvas.addEventListener('pointercancel', release);
 
   // Tastiera: Ctrl+Z annulla, Ctrl+Y o Ctrl+Maiusc+Z ripete (non mentre si scrive in un campo)
   ws.addEventListener('keydown', (e) => {
@@ -246,8 +307,9 @@ export function createEditor(ws, opts) {
   return {
     get on() { return E.on; },
     get changed() { return E.undo.length > 0; },
-    start(active = 0) {
+    start(active = 0, bg = 0) {
       E.on = true;
+      E.bg = bg;
       E.undo = [];
       E.redo = [];
       E.pending = null;
@@ -261,7 +323,11 @@ export function createEditor(ws, opts) {
       E.on = false;
       E.drawing = false;
       bar.hidden = true;
-      stage.classList.remove('is-editing', 'is-moving');
+      stage.classList.remove('is-editing');
+      touches.clear();
+      gesture = null;
+      tap = null;
+      canvas.style.transform = '';
     },
   };
 }

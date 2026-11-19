@@ -131,9 +131,10 @@
   .cr-swatch[aria-checked="true"] { outline: 3px solid var(--ink); outline-offset: 3px; }
   .cr-swatch:focus-visible { outline: 2px dashed var(--ink); outline-offset: 3px; }
 
-  /* Disegnando, il dito sullo schema colora invece di scorrere la pagina; con "Sposta" scorre */
+  /* Nell'editor il dito sullo schema disegna; due dita spostano e ingrandiscono (lo gestisce editor.js) */
   .cr-stage.is-editing #cr-canvas { touch-action: none; cursor: crosshair; }
-  .cr-stage.is-editing.is-moving #cr-canvas { touch-action: auto; cursor: grab; }
+  .cr-touch-only { display: none; }
+  @media (pointer: coarse) { .cr-editbar .cr-touch-only { display: block; } }
   .cr-editlabel { margin-bottom: -4px; font-size: .875rem; font-weight: 500; }
   /* Annulla · Ripeti · − · + sempre su una riga; sui telefoni stretti solo le frecce */
   .cr-history { display: grid; grid-template-columns: auto auto 44px 44px; justify-content: start; }

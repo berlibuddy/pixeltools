@@ -116,11 +116,12 @@
         <div class="cr-editbar" id="cr-editbar" hidden>
           <div class="segmented cr-tools" role="radiogroup" aria-label="Strumento">
             <label><input type="radio" name="cr-tool" value="pencil" checked><span>Matita</span></label>
+            <label><input type="radio" name="cr-tool" value="eraser"><span>Gomma</span></label>
             <label><input type="radio" name="cr-tool" value="fill"><span>Riempi</span></label>
             <label><input type="radio" name="cr-tool" value="pick"><span>Prendi</span></label>
-            <label><input type="radio" name="cr-tool" value="move"><span>Sposta</span></label>
           </div>
           <p class="hint" id="cr-tool-hint" aria-live="polite"></p>
+          <p class="hint cr-touch-only">Con due dita sposti lo schema; pizzicando lo ingrandisci.</p>
           <div class="cr-editrow cr-history">
             <button class="btn btn-small" type="button" id="cr-undo" aria-label="Annulla" disabled><span>↶<span class="cr-narrow-hide"> Annulla</span></span></button>
             <button class="btn btn-small" type="button" id="cr-redo" aria-label="Ripeti" disabled><span>↷<span class="cr-narrow-hide"> Ripeti</span></span></button>

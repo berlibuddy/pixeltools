@@ -473,7 +473,13 @@
      function startEditing() {
        recount(S.pattern);
        S.zoom = touchZoom();
-       editor.start(Math.min(1, S.pattern.palette.length - 1));
+       // Sfondo per la Gomma: nel Filet "Vuoto", altrimenti il colore più usato
+       const pal = S.pattern.palette;
+       const bg = S.pattern.tech === 'filet'
+         ? Math.max(0, pal.findIndex((c) => c.name === 'Vuoto'))
+         : pal.reduce((best, c, i) => (c.count > pal[best].count ? i : best), 0);
+       const active = pal.length > 1 ? (bg === 0 ? 1 : 0) : 0;
+       editor.start(active, bg);
        setLocked(true);
        renderPreview();
        renderLegend(S.pattern);
