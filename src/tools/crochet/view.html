@@ -11,6 +11,10 @@
     <div class="tool-layout">
       <!-- Colonna sinistra: controlli -->
       <aside class="panel tool-sidebar">
+        <div class="cr-edit-note" id="cr-edit-note" hidden>
+          <p><strong>Stai ritoccando a mano.</strong> Le impostazioni sono ferme, così i ritocchi non si perdono.</p>
+          <button class="btn btn-small" type="button" id="cr-edit-exit">Torna alle impostazioni</button>
+        </div>
         <h3 class="step-title"><span class="step-num">1</span> La tua foto</h3>
         <label class="dropzone dropzone-compact" id="cr-dropzone">
           <input type="file" accept="image/*" class="sr-only">
@@ -18,6 +22,18 @@
           <span>una foto JPG, PNG o WebP</span>
         </label>
         <p class="file-pill" id="cr-filename" hidden></p>
+        <button class="btn btn-small cr-blank-open" type="button" id="cr-blank-open" aria-expanded="false" aria-controls="cr-blank">oppure disegna su un foglio vuoto</button>
+        <div class="cr-blank" id="cr-blank" hidden>
+          <div class="field-row">
+            <label class="field">Larghezza (punti)
+              <input type="number" id="cr-blank-w" min="5" max="200" step="1" value="30">
+            </label>
+            <label class="field">Altezza (righe)
+              <input type="number" id="cr-blank-h" min="5" max="200" step="1" value="30">
+            </label>
+          </div>
+          <button class="btn btn-primary" type="button" id="cr-blank-create">Crea il foglio</button>
+        </div>
 
         <h3 class="step-title"><span class="step-num">2</span> Tecnica</h3>
         <div class="choice-list" role="radiogroup" aria-label="Tecnica">
@@ -96,9 +112,33 @@
           <h3>Anteprima schema</h3>
           <span class="cr-info" id="cr-info">—</span>
         </div>
+        <div class="cr-editbar" id="cr-editbar" hidden>
+          <div class="segmented cr-tools" role="radiogroup" aria-label="Strumento">
+            <label><input type="radio" name="cr-tool" value="pencil" checked><span>Matita</span></label>
+            <label><input type="radio" name="cr-tool" value="fill"><span>Riempi</span></label>
+            <label><input type="radio" name="cr-tool" value="pick"><span>Prendi</span></label>
+            <label><input type="radio" name="cr-tool" value="move"><span>Sposta</span></label>
+          </div>
+          <div class="cr-editrow">
+            <button class="btn btn-small" type="button" id="cr-undo" disabled>↶ Annulla</button>
+            <button class="btn btn-small" type="button" id="cr-redo" disabled>↷ Ripeti</button>
+            <button class="btn btn-small cr-zoom" type="button" id="cr-zoom-out" aria-label="Rimpicciolisci lo schema">−</button>
+            <button class="btn btn-small cr-zoom" type="button" id="cr-zoom-in" aria-label="Ingrandisci lo schema">+</button>
+          </div>
+          <div class="cr-palette" id="cr-palette" role="radiogroup" aria-label="Colore per disegnare"></div>
+          <div class="cr-editrow">
+            <label class="btn btn-small" id="cr-color-edit-label">Cambia colore<input type="color" id="cr-color-edit" class="sr-only"></label>
+            <label class="btn btn-small" id="cr-color-add-label">+ Nuovo colore<input type="color" id="cr-color-add" class="sr-only" value="#5bb8ff"></label>
+          </div>
+          <p class="hint">Matita: tocca o trascina sui quadretti. Riempi: colora tutta una zona. Prendi: prende il colore di un quadretto. Sposta: scorri lo schema senza disegnare (sul telefono serve per muoversi nello schema ingrandito).</p>
+        </div>
         <div class="stage cr-stage">
           <p class="stage-empty">Carica una foto per vedere qui lo schema.</p>
           <canvas id="cr-canvas" hidden aria-label="Schema per uncinetto"></canvas>
+        </div>
+        <div class="cr-edit-start" id="cr-edit-start" hidden>
+          <button class="btn" type="button" id="cr-edit-btn">✏ Ritocca a mano</button>
+          <span class="hint">Correggi i quadretti col mouse o col dito.</span>
         </div>
         <section class="cr-diff" id="cr-diff" hidden aria-labelledby="cr-diff-title">
           <div class="cr-diff-head">

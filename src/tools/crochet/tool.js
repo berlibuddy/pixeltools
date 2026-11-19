@@ -7,6 +7,7 @@
    ============================================================= */
    import { luma, toHex, boxSample, paletteFromImage, majorityLabels, simplify, patternStats, importantColors, stylize, keepOutlines } from '../../core/pixel-engine.js';
    import { $, $$, h, clamp } from '../../core/dom.js';
+   import { createEditor, recount, paletteEntry } from './editor.js';
    import { formatBytes, baseName, isImage, downloadBlob } from '../../core/files.js';
    import { fileToCanvas, canvasToBlob } from '../../core/images.js';
    import { setStatus, runTask, setupDropzone } from '../../core/ui.js';
@@ -68,6 +69,13 @@
      const diffColorsBtn = $('#cr-diff-colors-btn');
      const pngBtn = $('#cr-png');
      const pdfBtn = $('#cr-pdf');
+     const editNote = $('#cr-edit-note');
+     const editExit = $('#cr-edit-exit');
+     const editStart = $('#cr-edit-start');
+     const blankOpen = $('#cr-blank-open');
+     const blankBox = $('#cr-blank');
+     const blankW = $('#cr-blank-w');
+     const blankH = $('#cr-blank-h');
    
      const TECH = {
        c2c: { label: 'C2C / Tapestry', hint: 'Ogni quadretto è un blocco (C2C) o un punto (tapestry). Le lettere indicano il colore.' },
@@ -93,6 +101,9 @@
        pattern: null,   // schema calcolato
        important: 0,    // colori "importanti" della foto (per il consiglio "Usa N colori")
        styled: [],      // foto stilizzate, una per forza (si ricalcolano solo con una foto nuova)
+       layout: null,    // misure dell'anteprima (per sapere quale quadretto si tocca)
+       zoom: 1,         // ingrandimento dell'anteprima nell'editor
+       blank: false,    // true = foglio vuoto (nessuna foto)
      };
    
      /* ---------- 9a. Calcoli (boxSample, paletteFromImage, majorityLabels, simplify, luma, toHex: vedi src/core/pixel-engine.js) ---------- */
@@ -243,18 +254,23 @@
        for (let c = 1; c <= P.W; c++) {
          if (c === 1 || c % 5 === 0) ctx.fillText(String(c), pad + (c - 1) * cw + cw / 2, pad + gh + 6);
        }
+       return { pad, cw, ch, cssW, cssH };
      }
    
-     /** Anteprima: celle grandi quanto basta per stare nel riquadro */
+     /** Anteprima: celle grandi quanto basta per stare nel riquadro (× zoom nell'editor) */
      function renderPreview() {
        const P = S.pattern;
        if (!P) return;
        const avail = Math.max(240, stage.clientWidth - 40);
-       const cell = clamp(Math.floor((avail - 40) / P.W), 6, 22);
-       const dpr = window.devicePixelRatio || 1;
-       drawPattern(canvas, P, { cell, symbols: symbolsIn.checked, dpr });
-       canvas.style.width = `${canvas.width / dpr}px`;
-       canvas.style.height = `${canvas.height / dpr}px`;
+       const fit = clamp(Math.floor((avail - 40) / P.W), 6, 22);
+       const maxCell = Math.max(6, Math.floor(4000 / Math.max(P.W, P.H * P.ratio))); // canvas non troppo grande
+       const cell = clamp(Math.round(fit * S.zoom), 6, Math.min(48, maxCell));
+       // Telefoni: un canvas troppo grande non si disegna → densità ridotta se serve
+       const est = (cell * 2 + 30 + P.W * cell) * (cell * 2 + 30 + P.H * cell * P.ratio);
+       const dpr = Math.min(window.devicePixelRatio || 1, Math.sqrt(16e6 / est));
+       S.layout = drawPattern(canvas, P, { cell, symbols: symbolsIn.checked, dpr });
+       canvas.style.width = `${S.layout.cssW}px`;
+       canvas.style.height = `${S.layout.cssH}px`;
      }
    
      // Quadratino colorato: colore impostato così (e non con style="…") perché la CSP lo permetta
@@ -264,16 +280,17 @@
        return el;
      }
 
+     const puntiTxt = (n) => `${n} ${n === 1 ? 'punto' : 'punti'}`;
      function renderLegend(P) {
-       legendEl.replaceChildren(...P.palette.map((c) => h('li', { class: 'legend-item' },
+       legendEl.replaceChildren(...P.palette.filter((c) => c.count > 0).map((c) => h('li', { class: 'legend-item' },
          swatchOf(c.hex),
          h('span', { class: 'legend-letter' }, c.letter),
          h('span', { class: 'legend-name' }, c.name, h('small', {}, c.hex)),
-         h('span', { class: 'legend-count' }, `${c.count} punti`))));
+         h('span', { class: 'legend-count' }, puntiTxt(c.count)))));
      }
    
      function renderInfo(P) {
-       let txt = `${P.W} × ${P.H} punti · ${P.palette.length} colori · ${P.W * P.H} punti totali`;
+       let txt = `${P.W} × ${P.H} punti · ${P.palette.filter((c) => c.count > 0).length} colori · ${P.W * P.H} punti totali`;
        if (P.tech === 'sc') {
          const g = gauge();
          txt += ` · circa ${Math.round((P.W * 10) / g.st)} × ${Math.round((P.H * 10) / g.rows)} cm`;
@@ -304,13 +321,13 @@
        diffVerdict.textContent = VERDICTS[level];
        diffVerdict.dataset.level = String(level);
        diffList.replaceChildren(...rows.flatMap(([k, v]) => [h('dt', {}, k), h('dd', {}, v)]));
-       diffWarn.hidden = level < 2;
+       diffWarn.hidden = level < 2 || editor.on; // il consiglio parla della foto: non mentre si ritocca
        // "Questa foto ha N colori importanti": solo se non è già una foto difficile (lì servono MENO colori)
        const chosen = Number(colorsIn.value);
        const imp = S.important ?? 0;
        // …e non con lo stile "Sagoma": lì i 2 colori sono una scelta voluta
        const sagoma = ws.querySelector('input[name="cr-style"]:checked')?.value === 'sagoma';
-       const showColors = level < 2 && imp > chosen && !sagoma;
+       const showColors = level < 2 && imp > chosen && !sagoma && !editor.on;
        diffColors.hidden = !showColors;
        if (showColors) {
          diffColorsText.textContent = `Questa foto ha ${imp} colori importanti: con ${chosen} alcuni finiscono insieme.`;
@@ -326,6 +343,7 @@
 
      /** Ricalcola tutto (chiamata quando cambia un'opzione) */
      function regenerate() {
+       if (editor.on) return; // mentre si ritocca lo schema non si ricalcola dalla foto
        if (!S.srcData) { rowsOut.textContent = '—'; return; }
        const size = gridSize();
        rowsOut.textContent = String(size.H);
@@ -336,6 +354,7 @@
        renderDifficulty(S.pattern);
        pngBtn.disabled = false;
        pdfBtn.disabled = false;
+       editStart.hidden = false;
        if (size.capped) setStatus(status, `⚠ Altezza limitata a ${MAX_ROWS} righe: riduci la larghezza.`, 'warn');
      }
      let timer;
@@ -389,6 +408,7 @@
    
      /* ---------- 9d. Caricamento foto ---------- */
      setupDropzone($('#cr-dropzone'), async (files) => {
+       if (editor.on) return; // mentre si ritocca non si cambia foto (anche trascinandola)
        const file = files.find(isImage);
        if (!file) { setStatus(status, '✖ Seleziona un\'immagine (JPG, PNG, WebP…).', 'error'); return; }
        try {
@@ -398,6 +418,7 @@
          S.srcData = c.getContext('2d').getImageData(0, 0, c.width, c.height);
          S.important = importantColors(S.srcData);
          S.styled = [];
+         S.blank = false;
          c.width = c.height = 0;
          S.fileName = file.name;
          fileLabel.textContent = `🖼 ${file.name} · ${formatBytes(file.size)}`;
@@ -412,10 +433,117 @@
        }
      });
    
-     /* ---------- 9e. Esportazione ---------- */
+     /* ---------- 9e. Editor: ritocco a mano e foglio vuoto (vedi editor.js) ---------- */
+     const editor = createEditor(ws, {
+       canvas, stage, letters: LETTERS,
+       getPattern: () => S.pattern,
+       getLayout: () => S.layout,
+       redraw: renderPreview,
+       refresh: () => { renderPreview(); renderLegend(S.pattern); renderInfo(S.pattern); renderDifficulty(S.pattern); },
+       zoomBy: (f) => {
+         // ingrandisce tenendo fermo il centro di quello che si sta guardando
+         const cx = (stage.scrollLeft + stage.clientWidth / 2) / Math.max(1, stage.scrollWidth);
+         const cy = (stage.scrollTop + stage.clientHeight / 2) / Math.max(1, stage.scrollHeight);
+         S.zoom = clamp(S.zoom * f, 0.5, 6);
+         renderPreview();
+         stage.scrollLeft = cx * stage.scrollWidth - stage.clientWidth / 2;
+         stage.scrollTop = cy * stage.scrollHeight - stage.clientHeight / 2;
+       },
+     });
+
+     // Le impostazioni si fermano mentre si ritocca (restano attivi lettere, PNG e PDF)
+     const lockables = () => $$('.tool-sidebar input, .tool-sidebar button', ws)
+       .filter((el) => !el.closest('.cr-edit-note') && el !== symbolsIn && el !== pngBtn && el !== pdfBtn);
+     function setLocked(on) {
+       for (const el of lockables()) el.disabled = on;
+       $('#cr-dropzone').classList.toggle('is-disabled', on);
+       editNote.hidden = !on;
+       editStart.hidden = on || !S.pattern;
+       if (on) blankBox.hidden = true;
+     }
+
+     /** Sul telefono (schermo touch) i quadretti partono larghi almeno 18 px: misura adatta al dito */
+     function touchZoom() {
+       if (!window.matchMedia('(pointer: coarse)').matches) return 1;
+       const avail = Math.max(240, stage.clientWidth - 40);
+       const fit = clamp(Math.floor((avail - 40) / S.pattern.W), 6, 22);
+       return Math.max(1, 18 / fit);
+     }
+
+     function startEditing() {
+       recount(S.pattern);
+       S.zoom = touchZoom();
+       editor.start(Math.min(1, S.pattern.palette.length - 1));
+       setLocked(true);
+       renderPreview();
+       renderLegend(S.pattern);
+       renderDifficulty(S.pattern);
+       editNote.querySelector('button').focus();
+     }
+     $('#cr-edit-btn').addEventListener('click', startEditing);
+
+     // "Torna alle impostazioni": se ci sono ritocchi chiede conferma con un secondo tocco (niente finestre)
+     let confirmTimer;
+     editExit.addEventListener('click', () => {
+       if (editor.changed && !editExit.dataset.confirm) {
+         editExit.dataset.confirm = '1';
+         editExit.textContent = 'Sicuro? I ritocchi si perdono: tocca di nuovo';
+         clearTimeout(confirmTimer);
+         confirmTimer = setTimeout(resetExit, 5000);
+         return;
+       }
+       resetExit();
+       editor.stop();
+       setLocked(false);
+       S.zoom = 1;
+       if (S.srcData && !S.blank) { regenerate(); return; }
+       // Foglio vuoto: si torna alla pagina senza schema
+       S.blank = false;
+       S.pattern = null;
+       canvas.hidden = true;
+       stageEmpty.hidden = false;
+       legendEl.replaceChildren();
+       info.textContent = '—';
+       diffBox.hidden = true;
+       pngBtn.disabled = true;
+       pdfBtn.disabled = true;
+       editStart.hidden = true;
+       setStatus(status, '');
+     });
+     function resetExit() {
+       clearTimeout(confirmTimer);
+       delete editExit.dataset.confirm;
+       editExit.textContent = 'Torna alle impostazioni';
+     }
+
+     // Foglio vuoto: misure scelte da te, due colori di partenza (nel Filet: vuoto e pieno)
+     blankOpen.addEventListener('click', () => {
+       blankBox.hidden = !blankBox.hidden;
+       blankOpen.setAttribute('aria-expanded', String(!blankBox.hidden));
+     });
+     $('#cr-blank-create').addEventListener('click', () => {
+       const W = clamp(Math.round(Number(blankW.value) || 30), 5, 200);
+       const H = clamp(Math.round(Number(blankH.value) || 30), 5, 200);
+       blankW.value = W;
+       blankH.value = H;
+       const palette = S.tech === 'filet'
+         ? [paletteEntry('#FFFFFF', 'A', 'Vuoto'), paletteEntry('#111111', 'B', 'Pieno')]
+         : [paletteEntry('#F7F3EA', 'A', 'Colore 1'), paletteEntry('#1F2347', 'B', 'Colore 2')];
+       S.pattern = { W, H, ratio: stitchRatio(), cells: new Uint8Array(W * H), palette, tech: S.tech };
+       S.blank = true;
+       stageEmpty.hidden = true;
+       canvas.hidden = false;
+       pngBtn.disabled = false;
+       pdfBtn.disabled = false;
+       setStatus(status, '✔ Foglio pronto: scegli un colore e disegna.', 'success');
+       startEditing();
+       renderInfo(S.pattern);
+     });
+
+     /* ---------- 9f. Esportazione ---------- */
      /** Celle grandi per la stampa, senza superare ~4000 px */
      const exportCell = (P) => clamp(Math.floor(4000 / Math.max(P.W, P.H * P.ratio)), 8, 24);
-     const fileStem = () => `${baseName(S.fileName) || 'foto'}_schema-uncinetto`;
+     const fileStem = () => `${S.blank ? 'foglio' : baseName(S.fileName) || 'foto'}_schema-uncinetto`;
    
      pngBtn.addEventListener('click', () => runTask(pngBtn, status, async () => {
        const out = document.createElement('canvas');
@@ -438,7 +566,7 @@
        // Pagina 1: lo schema (sempre con le lettere, utili in stampa)
        let page = pdf.addPage([pw, ph]);
        page.drawText('Schema uncinetto', { x: m, y: ph - m - 18, size: 20, font: bold, color: black });
-       page.drawText(`${TECH[P.tech].label}  -  ${P.W} x ${P.H} punti  -  ${P.palette.length} colori`,
+       page.drawText(`${TECH[P.tech].label}  -  ${P.W} x ${P.H} punti  -  ${P.palette.filter((c) => c.count > 0).length} colori`,
          { x: m, y: ph - m - 36, size: 10, font, color: black });
        const img = document.createElement('canvas');
        drawPattern(img, P, { cell: exportCell(P), symbols: true });
@@ -453,7 +581,7 @@
        let y = ph - m - 18;
        page.drawText('Legenda filati', { x: m, y, size: 18, font: bold, color: black });
        y -= 36;
-       for (const c of P.palette) {
+       for (const c of P.palette.filter((col) => col.count > 0)) {
          if (y < m + 40) { page = pdf.addPage([pw, ph]); y = ph - m - 18; }
          page.drawRectangle({
            x: m, y: y - 5, width: 18, height: 18,
@@ -461,7 +589,7 @@
          });
          page.drawText(c.letter, { x: m + 28, y, size: 12, font: bold, color: black });
          page.drawText(`${c.name}   ${c.hex}`, { x: m + 50, y, size: 11, font, color: black });
-         page.drawText(`${c.count} punti`, { x: pw - m - 90, y, size: 11, font, color: black });
+         page.drawText(puntiTxt(c.count), { x: pw - m - 90, y, size: 11, font, color: black });
          y -= 28;
        }
    
@@ -500,7 +628,7 @@
        setStatus(status, `✔ PDF scaricato: schema + legenda (${formatBytes(bytes.length)}).`, 'success');
      }));
    
-     /* ---------- 9f. Ridimensionamento e visibilità ---------- */
+     /* ---------- 9g. Ridimensionamento e visibilità ---------- */
      let resizeTimer;
      window.addEventListener('resize', () => {
        clearTimeout(resizeTimer);

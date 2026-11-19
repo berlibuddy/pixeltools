@@ -93,3 +93,44 @@
     .cr-diff-list { grid-template-columns: 1fr; gap: 0; }
     .cr-diff-list dd { text-align: left; margin-bottom: 6px; }
   }
+
+  /* ---------- Editor: ritocco a mano e foglio vuoto (Uncinetto 1d) ---------- */
+  .cr-edit-note {
+    margin-bottom: 16px;
+    padding: 12px 14px;
+    background: #f1f1f1;
+    border: var(--border);
+    border-radius: var(--radius);
+    font-size: .9rem;
+  }
+  .cr-edit-note p { margin: 0 0 10px; }
+  .cr-blank-open { margin-top: 10px; }
+  .cr-blank { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+  .dropzone.is-disabled { opacity: .45; pointer-events: none; }
+
+  .cr-edit-start { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 14px; }
+  .cr-edit-start .hint { margin: 0; }
+
+  .cr-editbar { display: flex; flex-direction: column; gap: 10px; margin: 14px 0; }
+  .cr-editbar .hint { margin: 0; }
+  .cr-tools { grid-template-columns: repeat(4, 1fr); }
+  .cr-editrow { display: flex; flex-wrap: wrap; gap: 8px; }
+  .cr-zoom { min-width: 44px; font-size: 1.15rem; }
+  .cr-editrow .btn:has(input:focus-visible) { outline: 2px dashed var(--ink); outline-offset: 2px; }
+  .cr-palette { display: flex; flex-wrap: wrap; gap: 8px; }
+  .cr-swatch {
+    width: 42px;
+    height: 42px;
+    font: inherit;
+    font-weight: 700;
+    border: var(--border);
+    border-radius: var(--radius-sm);
+    box-shadow: 2px 2px 0 var(--ink);
+    cursor: pointer;
+  }
+  .cr-swatch[aria-checked="true"] { outline: 3px solid var(--ink); outline-offset: 3px; }
+  .cr-swatch:focus-visible { outline: 2px dashed var(--ink); outline-offset: 3px; }
+
+  /* Disegnando, il dito sullo schema colora invece di scorrere la pagina; con "Sposta" scorre */
+  .cr-stage.is-editing #cr-canvas { touch-action: none; cursor: crosshair; }
+  .cr-stage.is-editing.is-moving #cr-canvas { touch-action: auto; cursor: grab; }
